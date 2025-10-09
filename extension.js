@@ -47,10 +47,14 @@ function createOrShowWebview(context) {
 			try {
 				const response = await fetch(message.url);
 				const data = await response.json();
+				console.log(data.problemsetQuestionList);
+				
+				// send only the array if present to keep the message compact
+				const payload = data && data.problemsetQuestionList ? data.problemsetQuestionList : data;
 				panel.webview.postMessage({
 					command: "fetchResponse",
 					requestId: message.requestId,
-					data: data,
+					data: payload,
 				});
 			} catch (error) {
 				panel.webview.postMessage({
