@@ -1,0 +1,50 @@
+...existing code...
+# Node modules and build output
+node_modules/
+dist/
+dist-ssr/
+build/
+out/
+release/
+*.local
+
+# Parcel / Vite caches
+/.parcel-cache/
+/web/.parcel-cache/
+.cache/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Test runner / VS Code test harness
+.vscode-test/
+.vscode-test.*
+
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage and test output
+coverage/
+test-results/
+
+# Environment files
+.env
+.env.*.local
+
+# Misc project files
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
