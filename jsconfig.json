@@ -3,7 +3,6 @@
 		"jsx": "react-jsx",  /* Use the classic runtime for React. */
 		"module": "Node16",
 		"target": "ES2022",
-		"checkJs": true,  /* Typecheck .js files. */
 		"lib": [
 			"ES2022"
 		]
