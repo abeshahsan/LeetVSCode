@@ -2,6 +2,30 @@ import { useEffect, useState, useCallback } from "react";
 import useFetch from "./hooks/useFetch";
 
 function App() {
+	return <LoginPage />;
+}
+
+function LoginPage() {
+	return (
+		<div className='flex items-center justify-center min-h-screen bg-gray-900'>
+			<div className='bg-gray-800 shadow-lg rounded-lg p-8 max-w-md w-full text-center'>
+				<h1 className='text-3xl font-bold mb-6 text-gray-100'>Sign In</h1>
+				<button
+					onClick={() => {
+						if (window.vscode) {
+							window.vscode.postMessage({ command: "login" });
+						}
+					}}
+					className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-semibold transition'
+				>
+					Sign In with Browser
+				</button>
+			</div>
+		</div>
+	);
+}
+
+function ProblemList() {
 	const [items, setItems] = useState([]);
 	const { fetchData, loading, error } = useFetch();
 
@@ -43,22 +67,42 @@ function App() {
 					<ul className='divide-y divide-gray-100'>
 						{items.map((item, idx) => {
 							const id = item.questionFrontendId ?? item.id ?? idx;
-							const title = item.title || item.titleSlug || item.questionTitle || item.questionTitleSlug || item.name || `#${id}`;
-							const difficulty = item.difficulty || item.difficultyLevel || (item.stat && item.stat.difficulty) || 'Unknown';
+							const title =
+								item.title ||
+								item.titleSlug ||
+								item.questionTitle ||
+								item.questionTitleSlug ||
+								item.name ||
+								`#${id}`;
+							const difficulty =
+								item.difficulty ||
+								item.difficultyLevel ||
+								(item.stat && item.stat.difficulty) ||
+								"Unknown";
 							const acRate = item.acRate ?? (item.stat && item.stat.acRate) ?? null;
 							const tags = item.topicTags || item.topic_tags || item.tags || [];
 
 							return (
-								<li key={id} className='p-4 hover:bg-gray-50'>
+								<li
+									key={id}
+									className='p-4 hover:bg-gray-50'
+								>
 									<div className='flex items-center justify-between'>
 										<div className='font-semibold text-gray-800'>{title}</div>
 										<div className='text-sm text-gray-600'>{difficulty}</div>
 									</div>
-									<div className='text-sm text-gray-500 mt-1'>ID: {id} {acRate ? `• AC: ${Number(acRate).toFixed(1)}%` : null}</div>
+									<div className='text-sm text-gray-500 mt-1'>
+										ID: {id} {acRate ? `• AC: ${Number(acRate).toFixed(1)}%` : null}
+									</div>
 									{Array.isArray(tags) && tags.length > 0 && (
 										<div className='mt-2 flex flex-wrap gap-2'>
 											{tags.map((t, i) => (
-												<span key={t.name ?? t.slug ?? i} className='text-xs bg-gray-100 px-2 py-1 rounded'>{t.name || t.slug || t}</span>
+												<span
+													key={t.name ?? t.slug ?? i}
+													className='text-xs bg-gray-100 px-2 py-1 rounded'
+												>
+													{t.name || t.slug || t}
+												</span>
 											))}
 										</div>
 									)}
