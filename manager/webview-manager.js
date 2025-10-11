@@ -2,7 +2,7 @@ import path from "path";
 import * as vscode from "vscode";
 import fetch from "node-fetch";
 import { runLoginProcess } from "./login-manager.js";
-import { getProblems as fetchProblems } from "./leetcode-utils.js";
+import { getProblems as fetchProblems, getProblemDetails } from "./leetcode-utils.js";
 
 let panel;
 
@@ -83,6 +83,17 @@ export function createOrShowWebview(context) {
 				})
 				.catch((err) => {
 					console.error(err);
+				});
+		} else if (message.command === "open-problem") {
+			const { titleSlug  } = message.problem;
+			const cookies = context.globalState.get("leetcode_cookies");
+			await getProblemDetails(titleSlug , { cookies })
+				.then((res) => {
+					console.log(res);
+				})
+				.catch((err) => {
+					console.error(err);
+					vscode.window.showErrorMessage("Failed to fetch problem details.");
 				});
 		} else if (message.command === "logout") {
 			await context.globalState.update("leetcode_cookies", null);
