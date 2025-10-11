@@ -13,7 +13,7 @@ function App() {
 			}
 		};
 		window.addEventListener("vscode-message", handler);
-		// Ask extension for session info on mount
+		
 		if (window.vscode) {
 			window.vscode.postMessage({ command: "checkSession" });
 		}
