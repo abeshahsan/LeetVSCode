@@ -2,6 +2,7 @@ import path from "path";
 import * as vscode from "vscode";
 import fetch from "node-fetch";
 import { runLoginProcess } from "./login-manager.js";
+import { getProblems as fetchProblems } from "./leetcode-utils.js";
 
 let panel;
 
@@ -71,6 +72,21 @@ export function createOrShowWebview(context) {
 				command: "session",
 				cookiesExist: !!sess,
 			});
+		} else if (message.command === "fetch-problems") {
+			fetchProblems(1, 10)
+				.then((data) => {
+					// console.log(data);
+					panel?.webview.postMessage({
+						command: "problems",
+						data: data,
+					});
+				})
+				.catch((err) => {
+					console.error(err);
+				});
+		} else if (message.command === "logout") {
+			await context.globalState.update("leetcode_cookies", null);
+			vscode.window.showInformationMessage("Logged out successfully.");
 		}
 	});
 

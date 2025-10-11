@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { ProblemList } from "./components/problems-list";
+import { LoginPage } from "./components/login";
 
 function App() {
 	const [loggedIn, setLoggedIn] = useState(false);

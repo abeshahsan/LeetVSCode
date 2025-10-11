@@ -1,3 +1,5 @@
+import * as vscode from "vscode";
+
 // Submit code to LeetCode using session cookies
 // Usage: await submitToLeetCode(context, {slug: "two-sum", code: "...", lang: "python3"})
 // export async function submitToLeetCode(context, { slug, code, lang }) {
@@ -67,3 +69,69 @@
 // 	const data = await res.json();
 // 	return data?.data?.question?.questionId;
 // }
+
+export async function getProblems(start, end) {
+	const limit = end - start + 1;
+	const skip = start - 1;
+
+	const body = {
+		operationName: "problemsetQuestionList",
+		variables: {
+			categorySlug: "",
+			skip,
+			limit,
+			filters: {},
+		},
+		query: `
+            query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+                problemsetQuestionList: questionList(
+                    categorySlug: $categorySlug
+                    limit: $limit
+                    skip: $skip
+                    filters: $filters
+                ) {
+                    total: totalNum
+                    questions: data {
+                    acRate
+                    difficulty
+                    freqBar
+                    frontendQuestionId: questionFrontendId
+                    isFavor
+                    paidOnly: isPaidOnly
+                    status
+                    title
+                    titleSlug
+                    topicTags {
+                        name
+                        id
+                        slug
+                    }
+                    hasSolution
+                    hasVideoSolution
+                    }
+                }
+            }`,
+	};
+
+	let data;
+	try {
+		const res = await fetch("https://leetcode.com/graphql", {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+				referer: "https://leetcode.com",
+				// cookie: "LEETCODE_SESSION=<your_session>; csrftoken=<token>",
+			},
+			body: JSON.stringify(body),
+		});
+		const { data } = await res.json();
+		const output = vscode.window.createOutputChannel("LeetCode");
+
+		output.append(JSON.stringify(data.problemsetQuestionList, null, 2));
+		output.show();
+		if (!res.ok) throw new Error(`Error fetching problems: ${res.status} ${res.statusText}`);
+		return Promise.resolve(data);
+	} catch (err) {
+		return Promise.reject(err);
+	}
+}
