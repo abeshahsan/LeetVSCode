@@ -125,10 +125,7 @@ export async function getProblems(start, end) {
 			body: JSON.stringify(body),
 		});
 		const { data } = await res.json();
-		const output = vscode.window.createOutputChannel("LeetCode");
-
-		output.append(JSON.stringify(data.problemsetQuestionList, null, 2));
-		output.show();
+		
 		if (!res.ok) throw new Error(`Error fetching problems: ${res.status} ${res.statusText}`);
 		return Promise.resolve(data);
 	} catch (err) {
