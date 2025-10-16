@@ -115,8 +115,7 @@ export function activate(context) {
 	});
 	context.subscriptions.push(openProblemCmd);
 
-	// Optionally auto-show the webview on activation (can be toggled via config later)
-	createOrShowWebview(context);
+	// Do not auto-open the webview; it will open when a problem is selected or user clicks the command
 
 	// Create a status bar item for logout (hidden when not logged in)
 	const statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);

@@ -141,6 +141,8 @@ export async function getProblemDetails(slug, options) {
         question(titleSlug: $titleSlug) {
           questionId
           questionFrontendId
+					titleSlug
+			metaData
           title
           content
           difficulty
@@ -167,12 +169,12 @@ export async function getProblemDetails(slug, options) {
 			body: JSON.stringify(body),
 		});
 
-		const text = await res.text();
-		if (!res.ok) throw new Error(`Error ${res.status}: ${text}`);
+		if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
 
-		const { data, errors } = JSON.parse(text);
+		const { data, errors } = await res.json();
+		console.log(JSON.stringify(data, null, 2));
+		
 		if (errors) throw new Error(JSON.stringify(errors, null, 2));
-
 		return data;
 	} catch (err) {
 		console.error("Fetch failed:", err);

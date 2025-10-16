@@ -48,3 +48,5 @@ test-results/
 *.njsproj
 *.sln
 *.sw?
+
+Solutions/

@@ -1,49 +1,29 @@
 import { useEffect, useState } from "react";
-import { ProblemList } from "./components/problems-list";
-import { LoginPage } from "./components/login";
 import ProblemSession from "./components/problem-session";
 
 function App() {
-	const [loggedIn, setLoggedIn] = useState(false);
-	const [view, setView] = useState("list"); // 'list' | 'session'
 	const [sessionData, setSessionData] = useState(null);
 
 	useEffect(() => {
 		const handler = (event) => {
 			const msg = event.detail || event.data;
-
-			if (msg.command === "session") {
-				setLoggedIn(!!msg.cookiesExist);
-			}
-
 			if (msg.command === "problemDetails") {
 				setSessionData(msg.data);
-				setView("session");
 			}
 		};
 		window.addEventListener("vscode-message", handler);
-
-		if (window.vscode) {
-			window.vscode.postMessage({ command: "checkSession" });
-		}
 		return () => window.removeEventListener("vscode-message", handler);
 	}, []);
 
-	if (!loggedIn) return <LoginPage />;
-
-	if (view === "session" && sessionData) {
-		return (
-			<ProblemSession
-				data={sessionData}
-				onBack={() => {
-					setView("list");
-					setSessionData(null);
-				}}
-			/>
-		);
+	if (sessionData) {
+		return <ProblemSession data={sessionData} />;
 	}
 
-	return <ProblemList />;
+	return (
+		<div className="h-full w-full flex items-center justify-center text-gray-300">
+			<div className="opacity-75">Select a problem from the sidebar to view it here.</div>
+		</div>
+	);
 }
 
 export default App;
