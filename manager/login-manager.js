@@ -82,13 +82,6 @@ export async function runPlaywrightLogin(context) {
 	const debugFile = path.join(context.globalStorageUri.fsPath, "leetcode_cookies.json");
 	fs.writeFileSync(debugFile, JSON.stringify(cookies, null, 2));
 
-	// Log info to Output panel
-	const output = vscode.window.createOutputChannel("LeetCode");
-	output.appendLine(`✅ Login successful as ${user?.username || "unknown"}`);
-	output.appendLine("Cookies:");
-	cookies.forEach((c) => output.appendLine(` - ${c.name} = ${c.value}`));
-	output.show(true);
-
 	// ✅ Inform user and close
 	vscode.window.showInformationMessage(`✅ Logged in as ${user?.username || "unknown"}`);
 	await page.close();

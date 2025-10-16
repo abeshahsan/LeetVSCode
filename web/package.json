@@ -5,8 +5,8 @@
 	"type": "module",
 	"source": "src/main.jsx",
 	"scripts": {
-		"start": "parcel",
-		"build": "parcel build",
+		"start": "parcel src/main.jsx --no-content-hash --dist-dir dist",
+		"build": "parcel build src/main.jsx --no-content-hash --dist-dir dist",
 		"lint": "eslint .",
 		"preview": "vite preview"
 	},

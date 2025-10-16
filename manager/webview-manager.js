@@ -6,6 +6,32 @@ import { getProblems as fetchProblems, getProblemDetails } from "./leetcode-util
 
 let panel;
 
+function mapLangSlugToVsCode(slug) {
+	const s = (slug || "").toLowerCase();
+	const map = {
+		javascript: "javascript",
+		typescript: "typescript",
+		ts: "typescript",
+		js: "javascript",
+		python3: "python",
+		python: "python",
+		java: "java",
+		cpp: "cpp",
+		c: "c",
+		csharp: "csharp",
+		cs: "csharp",
+		go: "go",
+		golang: "go",
+		kotlin: "kotlin",
+		rust: "rust",
+		ruby: "ruby",
+		swift: "swift",
+		php: "php",
+		scala: "scala"
+	};
+	return map[s] || "plaintext";
+}
+
 function getWebviewContent(webview, extensionPath, initialState) {
 	const scriptSrc = webview.asWebviewUri(vscode.Uri.file(path.join(extensionPath, "web", "dist", "main.js")));
 	const cssSrc = webview.asWebviewUri(vscode.Uri.file(path.join(extensionPath, "web", "dist", "main.css")));
@@ -37,7 +63,7 @@ function getWebviewContent(webview, extensionPath, initialState) {
 		});
 	</script>
 
-	<script src="${scriptSrc}"></script>
+	<script type="module" src="${scriptSrc}"></script>
 </body>
 </html>`;
 }
@@ -98,7 +124,37 @@ export function createOrShowWebview(context) {
 					const { titleSlug } = message.problem;
 					const cookies = context.globalState.get("leetcode_cookies");
 					const res = await getProblemDetails(titleSlug, { cookies });
+
+					// Always reveal the problem webview in the first column
+					panel?.reveal(vscode.ViewColumn.One);
 					panel?.webview.postMessage({ command: "problemDetails", data: res });
+
+					// Open a solution editor in a separate (second) column
+					try {
+						const question = res?.question || res?.data?.question || {};
+						const snippets = question.codeSnippets || [];
+
+						// Prefer JavaScript/TypeScript, otherwise first snippet
+						const preferredOrder = ["typescript", "javascript", "python3", "python", "java", "cpp"];
+						const chosen =
+							preferredOrder
+								.map((ls) => snippets.find((s) => s.langSlug?.toLowerCase() === ls))
+								.find(Boolean) || snippets[0];
+
+						const langSlug = (chosen?.langSlug || "plaintext").toLowerCase();
+						const languageId = mapLangSlugToVsCode(langSlug);
+
+						const header = `// ${question?.questionFrontendId ? question.questionFrontendId + ". " : ""}${question?.title || titleSlug || "Problem"}`;
+						const separator = `\n// ------------------------------\n`;
+						const prompt = `// TODO: Implement your solution below.\n`;
+						const content = [header, separator, prompt, chosen?.code || ""].join("\n");
+
+						const doc = await vscode.workspace.openTextDocument({ language: languageId, content });
+						await vscode.window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.Two, preview: false });
+					} catch (e) {
+						console.error("Failed to open solution editor:", e);
+						vscode.window.showWarningMessage("Opened problem, but failed to open solution editor.");
+					}
 					break;
 				}
 
