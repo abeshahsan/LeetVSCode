@@ -1,5 +1,4 @@
 import ProblemPane from "./problem-pane";
-import SolutionPane from "./solution-pane";
 
 export default function ProblemSession({ data, onBack }) {
   const problem = data?.question;
@@ -19,24 +18,12 @@ export default function ProblemSession({ data, onBack }) {
             {problem?.title || "Problem"}
           </h2>
         </div>
+
+        <div />
       </div>
 
-      <div className="flex-1 overflow-hidden flex">
-        {/* Left: Problem */}
-        <div className="w-1/2 min-w-[280px] border-r border-gray-800 flex flex-col">
-          <div className="px-3 py-2 border-b border-gray-800 bg-[#232323] text-gray-300 text-sm font-medium sticky top-0">Problem</div>
-          <div className="flex-1 overflow-auto p-4">
-            <ProblemPane problem={problem} />
-          </div>
-        </div>
-
-        {/* Right: Solution */}
-        <div className="w-1/2 min-w-[280px] flex flex-col">
-          <div className="px-3 py-2 border-b border-gray-800 bg-[#232323] text-gray-300 text-sm font-medium sticky top-0">Solution</div>
-          <div className="flex-1 overflow-auto p-4">
-            <SolutionPane problem={problem} />
-          </div>
-        </div>
+      <div className="flex-1 overflow-auto p-4">
+        <ProblemPane problem={problem} />
       </div>
     </div>
   );

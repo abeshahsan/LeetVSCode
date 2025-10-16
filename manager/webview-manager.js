@@ -2,35 +2,10 @@ import path from "path";
 import * as vscode from "vscode";
 import fetch from "node-fetch";
 import { runLoginProcess } from "./login-manager.js";
-import { getProblems as fetchProblems, getProblemDetails } from "./leetcode-utils.js";
+import { getAllProblems, getProblemDetails } from "./leetcode-utils.js";
 
 let panel;
-
-function mapLangSlugToVsCode(slug) {
-	const s = (slug || "").toLowerCase();
-	const map = {
-		javascript: "javascript",
-		typescript: "typescript",
-		ts: "typescript",
-		js: "javascript",
-		python3: "python",
-		python: "python",
-		java: "java",
-		cpp: "cpp",
-		c: "c",
-		csharp: "csharp",
-		cs: "csharp",
-		go: "go",
-		golang: "go",
-		kotlin: "kotlin",
-		rust: "rust",
-		ruby: "ruby",
-		swift: "swift",
-		php: "php",
-		scala: "scala"
-	};
-	return map[s] || "plaintext";
-}
+let allProblems = [];
 
 function getWebviewContent(webview, extensionPath, initialState) {
 	const scriptSrc = webview.asWebviewUri(vscode.Uri.file(path.join(extensionPath, "web", "dist", "main.js")));
@@ -102,7 +77,7 @@ export function createOrShowWebview(context) {
 
 				case "login":
 					await runLoginProcess(panel, context);
-					
+
 					break;
 
 				case "checkSession": {
@@ -115,8 +90,15 @@ export function createOrShowWebview(context) {
 				}
 
 				case "fetch-problems": {
-					const data = await fetchProblems(1, 10);
-					panel?.webview.postMessage({ command: "problems", data });
+					if (allProblems.length == 0) {
+						const data = await getAllProblems();
+						allProblems = data?.problemsetQuestionList?.questions || [];
+					}
+					// slice
+					const slicedProblems = allProblems.slice(40, 90); // Example slice
+					console.log(slicedProblems);
+
+					panel?.webview.postMessage({ command: "problems", data: slicedProblems });
 					break;
 				}
 
@@ -125,38 +107,13 @@ export function createOrShowWebview(context) {
 					const cookies = context.globalState.get("leetcode_cookies");
 					const res = await getProblemDetails(titleSlug, { cookies });
 
-					// Always reveal the problem webview in the first column
+					// Reveal the problem webview in the first column and send details
 					panel?.reveal(vscode.ViewColumn.One);
 					panel?.webview.postMessage({ command: "problemDetails", data: res });
-
-					// Open a solution editor in a separate (second) column
-					try {
-						const question = res?.question || res?.data?.question || {};
-						const snippets = question.codeSnippets || [];
-
-						// Prefer JavaScript/TypeScript, otherwise first snippet
-						const preferredOrder = ["typescript", "javascript", "python3", "python", "java", "cpp"];
-						const chosen =
-							preferredOrder
-								.map((ls) => snippets.find((s) => s.langSlug?.toLowerCase() === ls))
-								.find(Boolean) || snippets[0];
-
-						const langSlug = (chosen?.langSlug || "plaintext").toLowerCase();
-						const languageId = mapLangSlugToVsCode(langSlug);
-
-						const header = `// ${question?.questionFrontendId ? question.questionFrontendId + ". " : ""}${question?.title || titleSlug || "Problem"}`;
-						const separator = `\n// ------------------------------\n`;
-						const prompt = `// TODO: Implement your solution below.\n`;
-						const content = [header, separator, prompt, chosen?.code || ""].join("\n");
-
-						const doc = await vscode.workspace.openTextDocument({ language: languageId, content });
-						await vscode.window.showTextDocument(doc, { viewColumn: vscode.ViewColumn.Two, preview: false });
-					} catch (e) {
-						console.error("Failed to open solution editor:", e);
-						vscode.window.showWarningMessage("Opened problem, but failed to open solution editor.");
-					}
 					break;
 				}
+
+				// Removed run-code handler
 
 				case "logout":
 					// Delegate logout to the extension command so the status bar and other UI stay in sync
@@ -192,4 +149,23 @@ export function notifySession(cookiesExist) {
 		command: "session",
 		cookiesExist: !!cookiesExist,
 	});
+}
+
+// Open a specific problem from the extension (e.g., sidebar) into the existing webview
+export async function openProblemFromExtension(context, titleSlug) {
+	try {
+		// Ensure the webview exists and is visible
+		createOrShowWebview(context);
+
+		// Fetch problem details using stored cookies (requires login)
+		const cookies = context.globalState.get("leetcode_cookies");
+		const res = await getProblemDetails(titleSlug, { cookies });
+
+		// Show the webview and send the problem details
+		panel?.reveal(vscode.ViewColumn.One);
+		panel?.webview.postMessage({ command: "problemDetails", data: res });
+	} catch (err) {
+		console.error("Failed to open problem from extension:", err);
+		vscode.window.showErrorMessage(`Failed to open problem: ${err.message}`);
+	}
 }

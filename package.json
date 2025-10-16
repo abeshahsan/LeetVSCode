@@ -1,5 +1,6 @@
 {
   "name": "webview",
+  "publisher": "abeshahsan",
   "displayName": "webview",
   "description": "",
   "type": "module",
@@ -22,9 +23,60 @@
       },
       {
         "command": "webview.openWebview",
-        "title": "Come on"
+        "title": "Open LeetCode",
+        "icon": {
+          "light": "resources/icon.svg",
+          "dark": "resources/icon.svg"
+        }
+      },
+      {
+        "command": "leet.signIn",
+        "title": "Sign In to LeetCode",
+        "icon": "$(account)"
+      },
+      {
+        "command": "leet.openProblem",
+        "title": "Open LeetCode Problem"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "leet",
+          "title": "LeetCode",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "leet": [
+        {
+          "id": "leetView",
+          "name": "LeetCode",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "leetView",
+        "contents": "# LeetCode\n[Open LeetCode](command:webview.openWebview) · [Sign In](command:leet.signIn)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "webview.openWebview",
+          "when": "view == leetView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "leet.signIn",
+          "when": "view == leetView",
+          "group": "navigation@2"
+        }
+      ]
+    },
     "customEditors": [
       {
         "viewType": "leetcode.problemView",

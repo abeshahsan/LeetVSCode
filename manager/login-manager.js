@@ -30,62 +30,68 @@ export async function runLoginProcess(panel, context) {
 export async function runPlaywrightLogin(context) {
 	const userDataDir = path.join(context.globalStorageUri.fsPath, "chrome-profile");
 
-	const browserContext = await chromium.launchPersistentContext(userDataDir, {
-		headless: false,
-		args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
-	});
-
-	const page = await browserContext.newPage();
-	await page.goto("https://leetcode.com/accounts/login/", { waitUntil: "domcontentloaded" });
-
-	vscode.window.showInformationMessage("🟡 Please complete login manually...");
-
-	let loginDetected = false;
+	let browserContext;
+	let page;
 	let user = null;
+	try {
+		browserContext = await chromium.launchPersistentContext(userDataDir, {
+			headless: false,
+			args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
+		});
 
-	page.on("response", async (response) => {
-		try {
-			const url = response.url();
-			if (url.includes("/graphql/") && response.status() === 200) {
-				const json = await response.json().catch(() => null);
-				if (json?.data?.currentUser?.username) {
-					user = json.data.currentUser;
-					loginDetected = true;
+		page = await browserContext.newPage();
+		await page.goto("https://leetcode.com/accounts/login/", { waitUntil: "domcontentloaded" });
+
+		vscode.window.showInformationMessage("🟡 Please complete login manually...");
+
+		let loginDetected = false;
+		page.on("response", async (response) => {
+			console.log("lol");
+			
+			try {
+				const url = response.url();
+				if (url.includes("/graphql/") && response.status() === 200) {
+					const json = await response.json().catch(() => null);
+					if (json?.data?.currentUser?.username) {
+						user = json.data.currentUser;
+						loginDetected = true;
+					}
 				}
+			} catch (err) {
+				console.error(err);
 			}
-		} catch {
-			// ignore parsing errors
+		});
+
+		async function waitForLogin(ctx, page, { timeoutMs = 180000, pollMs = 1000 } = {}) {
+			const start = Date.now();
+			while (Date.now() - start < timeoutMs) {
+				const all = await ctx.cookies();
+				const sess = all.find((c) => c.name === "LEETCODE_SESSION" && c.value);
+				const csrf = all.find((c) => c.name === "csrftoken" && c.value);
+				const url = page.url();
+				if (sess || csrf || !url.includes("/accounts/login")) {
+					return all;
+				}
+				await new Promise((r) => setTimeout(r, pollMs));
+			}
+			return null;
 		}
-	});
 
-	// Get cookies after waiting
-	const cookies = await browserContext.cookies();
-	// Check for LEETCODE_SESSION cookie
-	const sessionCookie = cookies.find((c) => c.name === "LEETCODE_SESSION" && c.value);
+		let cookies = await waitForLogin(browserContext, page);
+		const sessionCookie = cookies?.find((c) => c.name === "LEETCODE_SESSION" && c.value);
+		if (!loginDetected && !sessionCookie) {
+			throw new Error("Login not detected (timeout). Please keep the browser open and complete the login.");
+		}
 
-	if (!loginDetected && !sessionCookie) {
-		vscode.window.showErrorMessage("❌ Login not detected (timeout).");
-		await browserContext.close();
-		return;
+		if (!cookies) {
+			cookies = await browserContext.cookies();
+		}
+
+		vscode.window.showInformationMessage(`✅ Logged in`);
+
+		return { user, cookies };
+	} finally {
+		try { await page?.close(); } catch {}
+		try { await browserContext?.close(); } catch {}
 	}
-
-	// If session cookie exists but user is not detected, set user to minimal info
-	if (!user && sessionCookie) {
-		user = { username: "(session detected)" };
-	}
-
-	// Store in globalState
-	await context.globalState.update("leetcode_cookies", cookies);
-	await context.globalState.update("leetcode_user", user);
-
-	// Write to file for debugging
-	const debugFile = path.join(context.globalStorageUri.fsPath, "leetcode_cookies.json");
-	fs.writeFileSync(debugFile, JSON.stringify(cookies, null, 2));
-
-	// ✅ Inform user and close
-	vscode.window.showInformationMessage(`✅ Logged in as ${user?.username || "unknown"}`);
-	await page.close();
-	await browserContext.close();
-
-	return { user, cookies };
 }

@@ -1,10 +1,10 @@
 function ProblemPane({ problem }) {
+	const html = problem?.content || "<p class='text-gray-400'>No description available.</p>";
 	return (
 		<div className="prose prose-invert max-w-none">
-			<p className="text-gray-400">Problem Viewer Component (placeholder)</p>
-			<div className="mt-4 p-4 border border-gray-700 rounded">
-				<p className="text-sm text-gray-400">Title:</p>
-				<p className="text-white font-medium">{problem?.title || "—"}</p>
+			<h2 className="text-white mb-3">{problem?.title || "Problem"}</h2>
+			<div className="border border-gray-800 rounded p-4 bg-[#161616]">
+				<div dangerouslySetInnerHTML={{ __html: html }} />
 			</div>
 		</div>
 	);

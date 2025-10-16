@@ -70,16 +70,11 @@ import * as vscode from "vscode";
 // 	return data?.data?.question?.questionId;
 // }
 
-export async function getProblems(start, end) {
-	const limit = end - start + 1;
-	const skip = start - 1;
-
+export async function getAllProblems() {
 	const body = {
 		operationName: "problemsetQuestionList",
 		variables: {
 			categorySlug: "",
-			skip,
-			limit,
 			filters: {},
 		},
 		query: `

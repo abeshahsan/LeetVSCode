@@ -10,7 +10,7 @@ export function ProblemList() {
 		const handler = (event) => {
 			const msg = event.detail || event.data;
 			if (msg.command === "problems") {
-				setItems(msg.data?.problemsetQuestionList?.questions || []);
+				setItems(msg.data || []);
 			}
 		};
 		window.addEventListener("vscode-message", handler);
