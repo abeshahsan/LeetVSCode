@@ -76,6 +76,7 @@ export function createOrShowWebview(context) {
 
 				case "login":
 					await runLoginProcess(panel, context);
+					
 					break;
 
 				case "checkSession": {
@@ -102,8 +103,8 @@ export function createOrShowWebview(context) {
 				}
 
 				case "logout":
-					await context.globalState.update("leetcode_cookies", null);
-					vscode.window.showInformationMessage("Logged out successfully.");
+					// Delegate logout to the extension command so the status bar and other UI stay in sync
+					await vscode.commands.executeCommand("leet.logout", context);
 					break;
 
 				case "saveState":
@@ -127,4 +128,12 @@ export function createOrShowWebview(context) {
 	});
 
 	return panel;
+}
+
+// Notify the webview about session state changes (cookiesExist boolean)
+export function notifySession(cookiesExist) {
+	panel?.webview.postMessage({
+		command: "session",
+		cookiesExist: !!cookiesExist,
+	});
 }

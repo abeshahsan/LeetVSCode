@@ -25,6 +25,29 @@
         "title": "Come on"
       }
     ],
+    "customEditors": [
+      {
+        "viewType": "leetcode.problemView",
+        "displayName": "LeetCode Problem Viewer",
+        "selector": [
+          { "filenamePattern": "*.leetcode-problem" }
+        ]
+      },
+      {
+        "viewType": "leetcode.problemList",
+        "displayName": "LeetCode Problems List",
+        "selector": [
+          { "filenamePattern": "*.leetcode-list" }
+        ]
+      },
+      {
+        "viewType": "leetcode.problemSession",
+        "displayName": "LeetCode Problem Session",
+        "selector": [
+          { "filenamePattern": "*.leetcode-session" }
+        ]
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Webview Extension",

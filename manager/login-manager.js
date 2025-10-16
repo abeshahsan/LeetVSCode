@@ -6,10 +6,11 @@ import { chromium } from "playwright";
 export async function runLoginProcess(panel, context) {
 	try {
 		const result = await runPlaywrightLogin(context);
+		context.globalState.update("leetcode_cookies", result.cookies);
+		context.globalState.update("leetcode_user", result.user);
 		panel?.webview.postMessage({
-			command: "loginResult",
-			success: true,
-			user: result.user,
+			command: "session",
+			cookiesExist: !!result.cookies,
 		});
 	} catch (err) {
 		panel?.webview.postMessage({

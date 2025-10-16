@@ -8,12 +8,13 @@ function App() {
 	useEffect(() => {
 		const handler = (event) => {
 			const msg = event.detail || event.data;
-			if (msg.command === "session" && msg.cookiesExist) {
-				setLoggedIn(true);
+			
+			if (msg.command === "session") {
+				setLoggedIn(!!msg.cookiesExist);
 			}
 		};
 		window.addEventListener("vscode-message", handler);
-		
+
 		if (window.vscode) {
 			window.vscode.postMessage({ command: "checkSession" });
 		}
