@@ -12,6 +12,12 @@ export async function runLoginProcess(panel, context) {
 			command: "session",
 			cookiesExist: !!result.cookies,
 		});
+		// Notify the extension to refresh UI (status bar) after login
+		try {
+			await vscode.commands.executeCommand("leet.refreshStatus");
+		} catch (e) {
+			// ignore if command not registered
+		}
 	} catch (err) {
 		panel?.webview.postMessage({
 			command: "loginResult",

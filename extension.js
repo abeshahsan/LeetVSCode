@@ -23,6 +23,12 @@ export function activate(context) {
 		}
 	}
 
+	// Expose a command other parts of the extension can call to refresh the status
+	const refreshCommand = vscode.commands.registerCommand("leet.refreshStatus", async () => {
+		await refreshStatus();
+	});
+	context.subscriptions.push(refreshCommand);
+
 	// Register logout command
 	const logoutCommand = vscode.commands.registerCommand("leet.logout", async (passedContext) => {
 		// Allow being called with either the extension context or nothing
