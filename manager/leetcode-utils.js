@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
 
-
-
 export async function getAllProblems() {
 	const body = {
 		operationName: "problemsetQuestionList",
@@ -105,7 +103,7 @@ export async function getProblemDetails(slug, options) {
 
 		const { data, errors } = await res.json();
 		console.log(JSON.stringify(data, null, 2));
-		
+
 		if (errors) throw new Error(JSON.stringify(errors, null, 2));
 		return data;
 	} catch (err) {
@@ -113,3 +111,24 @@ export async function getProblemDetails(slug, options) {
 		throw err;
 	}
 }
+
+export const langToExtentionMap = {
+	javascript: "js",
+	typescript: "ts",
+	python: "py",
+	python3: "py",
+	java: "java",
+	cpp: "cpp",
+	c: "c",
+	csharp: "cs",
+	go: "go",
+	rust: "rs",
+	kotlin: "kt",
+	swift: "swift",
+	ruby: "rb",
+	scala: "scala",
+	php: "php",
+	dart: "dart",
+	typescriptreact: "tsx",
+	javascriptreact: "jsx",
+};

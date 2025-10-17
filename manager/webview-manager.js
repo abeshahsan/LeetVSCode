@@ -5,11 +5,11 @@ import { runLoginProcess } from "./login-manager.js";
 import { getProblemDetails } from "./leetcode-utils.js";
 import * as fs from "fs";
 
+import { leetcodeOutputChannel } from "../webview/output-logger.js";
+import { langToExtentionMap } from "./leetcode-utils.js";
+
 let panel;
 
-const output = vscode.window.createOutputChannel("LeetCode Runner");
-
-// Read response body once as text, try JSON.parse, return both
 async function readJsonOrText(res) {
 	const text = await res.text().catch(() => "");
 	try {
@@ -50,8 +50,6 @@ function getWebviewContent(webview, extensionPath, initialState) {
 </html>`;
 }
 
-
-
 export function createOrShowWebview(context) {
 	const savedState = context.globalState.get("leetcode_state") || {};
 
@@ -80,8 +78,6 @@ export function createOrShowWebview(context) {
 					break;
 				}
 
-
-
 				case "open-problem": {
 					const { titleSlug } = message.problem;
 					const cookies = context.globalState.get("leetcode_cookies");
@@ -94,27 +90,7 @@ export function createOrShowWebview(context) {
 				case "open-solution-file": {
 					const { slug, langSlug, code } = message;
 					try {
-						const langMap = {
-							javascript: "js",
-							typescript: "ts",
-							python: "py",
-							python3: "py",
-							java: "java",
-							cpp: "cpp",
-							c: "c",
-							csharp: "cs",
-							go: "go",
-							rust: "rs",
-							kotlin: "kt",
-							swift: "swift",
-							ruby: "rb",
-							scala: "scala",
-							php: "php",
-							dart: "dart",
-							typescriptreact: "tsx",
-							javascriptreact: "jsx",
-						};
-						const ext = langMap[langSlug] || langSlug || "txt";
+						const ext = langToExtentionMap[langSlug] || "txt";
 						const solutionsDir = path.join(context.extensionPath, "Solutions");
 						fs.mkdirSync(solutionsDir, { recursive: true });
 						const filePath = path.join(solutionsDir, `${slug}.${ext}`);
@@ -137,18 +113,18 @@ export function createOrShowWebview(context) {
 				case "run-remote": {
 					const { slug, langSlug, input } = message;
 					try {
-						output.appendLine(`[run-remote] Starting with slug=${slug}, lang=${langSlug}`);
-						
+						leetcodeOutputChannel.appendLine(`[run-remote] Starting with slug=${slug}, lang=${langSlug}`);
+
 						const cookies = context.globalState.get("leetcode_cookies") || [];
-						output.appendLine(`[run-remote] Found ${cookies.length} cookies`);
-						
+						leetcodeOutputChannel.appendLine(`[run-remote] Found ${cookies.length} cookies`);
+
 						const cookieStr = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
 						const csrftoken = cookies.find((c) => c.name === "csrftoken")?.value || "";
 
 						const langMap = {
 							javascript: "javascript",
-							typescript: "typescript", 
-							python: "python3",
+							typescript: "typescript",
+							python: "python",
 							python3: "python3",
 							java: "java",
 							cpp: "cpp",
@@ -163,7 +139,9 @@ export function createOrShowWebview(context) {
 							const details = await getProblemDetails(slug, { cookies });
 							questionId = details?.question?.questionId || details?.questionId || null;
 						} catch (e) {
-							output.appendLine(`[run-remote] Failed to get question details: ${e.message}`);
+							leetcodeOutputChannel.appendLine(
+								`[run-remote] Failed to get question details: ${e.message}`
+							);
 						}
 
 						let typed_code = "";
@@ -173,10 +151,10 @@ export function createOrShowWebview(context) {
 							const found = exts.map((e) => path.join(solutionsDir, `${slug}.${e}`)).find(fs.existsSync);
 							if (found) {
 								typed_code = fs.readFileSync(found, "utf8");
-								output.appendLine(`[run-remote] Solution loaded from: ${found}`);
+								leetcodeOutputChannel.appendLine(`[run-remote] Solution loaded from: ${found}`);
 							}
 						} catch (e) {
-							output.appendLine(`[run-remote] Error reading code: ${e.message}`);
+							leetcodeOutputChannel.appendLine(`[run-remote] Error reading code: ${e.message}`);
 						}
 
 						const payload = {
@@ -187,8 +165,8 @@ export function createOrShowWebview(context) {
 						};
 
 						const url = `https://leetcode.com/problems/${slug}/interpret_solution/`;
-						output.appendLine(`[run-remote] POST ${url}`);
-						output.appendLine(`[run-remote] Payload: ${JSON.stringify(payload, null, 2)}`);
+						leetcodeOutputChannel.appendLine(`[run-remote] POST ${url}`);
+						leetcodeOutputChannel.appendLine(`[run-remote] Payload: ${JSON.stringify(payload, null, 2)}`);
 
 						const res = await fetch(url, {
 							method: "POST",
@@ -203,8 +181,8 @@ export function createOrShowWebview(context) {
 						});
 
 						const { obj: postObj, text: postText } = await readJsonOrText(res);
-						output.appendLine(`[run-remote] POST status: ${res.status}`);
-						output.appendLine(`[run-remote] POST response: ${postText}`);
+						leetcodeOutputChannel.appendLine(`[run-remote] POST status: ${res.status}`);
+						leetcodeOutputChannel.appendLine(`[run-remote] POST response: ${postText}`);
 
 						const interpretId = postObj?.interpret_id || postObj?.interpretation_id;
 						if (!interpretId) {
@@ -213,7 +191,7 @@ export function createOrShowWebview(context) {
 						}
 
 						const checkUrl = `https://leetcode.com/submissions/detail/${interpretId}/check/`;
-						output.appendLine(`[run-remote] Polling check URL: ${checkUrl}`);
+						leetcodeOutputChannel.appendLine(`[run-remote] Polling check URL: ${checkUrl}`);
 
 						let final = null;
 						for (let attempt = 1; attempt <= 60; attempt++) {
@@ -230,26 +208,30 @@ export function createOrShowWebview(context) {
 							});
 
 							const { obj: checkObj, text: checkText } = await readJsonOrText(checkRes);
-							output.appendLine(`[run-remote] CHECK #${attempt} status=${checkRes.status}`);
-							output.appendLine(`[run-remote] CHECK response: ${checkText}`);
+							leetcodeOutputChannel.appendLine(
+								`[run-remote] CHECK #${attempt} status=${checkRes.status}`
+							);
+							leetcodeOutputChannel.appendLine(`[run-remote] CHECK response: ${checkText}`);
 
 							const state = checkObj?.state || checkObj?.status_msg || "";
 							if (/SUCCESS|FINISHED|Accepted|AC/i.test(state)) {
 								final = checkObj;
-								output.appendLine(`[run-remote] Final state reached: ${state}`);
+								leetcodeOutputChannel.appendLine(`[run-remote] Final state reached: ${state}`);
 								break;
 							}
 						}
 
 						if (final) {
-							output.appendLine(`[run-remote] Final response JSON: ${JSON.stringify(final, null, 2)}`);
+							leetcodeOutputChannel.appendLine(
+								`[run-remote] Final response JSON: ${JSON.stringify(final, null, 2)}`
+							);
 						} else {
-							output.appendLine(`[run-remote] No final response - timeout occurred`);
+							leetcodeOutputChannel.appendLine(`[run-remote] No final response - timeout occurred`);
 						}
 
 						panel?.webview.postMessage({ command: "runResponse", data: final || { error: "Timeout" } });
 					} catch (err) {
-						output.appendLine(`[run-remote] Error: ${err.message}`);
+						leetcodeOutputChannel.appendLine(`[run-remote] Error: ${err.message}`);
 						panel?.webview.postMessage({ command: "runError", error: String(err) });
 					}
 					break;
