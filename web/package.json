@@ -4,9 +4,18 @@
 	"version": "0.0.0",
 	"type": "module",
 	"source": "src/main.jsx",
+	"targets": {
+		"default": {
+			"distDir": "dist",
+			"publicUrl": "./",
+			"includeNodeModules": true,
+			"optimize": false,
+			"sourceMap": true
+		}
+	},
 	"scripts": {
-		"start": "parcel src/main.jsx --no-content-hash --dist-dir dist",
-		"build": "parcel build src/main.jsx --no-content-hash --dist-dir dist",
+		"start": "parcel",
+		"build": "parcel build",
 		"lint": "eslint .",
 		"preview": "vite preview"
 	},
@@ -25,6 +34,7 @@
 		"eslint-plugin-react-refresh": "^0.4.22",
 		"globals": "^16.4.0",
 		"parcel": "^2.16.0",
+		"parcel-reporter-static-files-copy": "^1.5.3",
 		"postcss": "^8.5.6",
 		"tailwindcss": "^3.4.18",
 		"vite": "^7.1.7"

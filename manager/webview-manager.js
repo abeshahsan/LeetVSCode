@@ -5,7 +5,7 @@ import { runLoginProcess } from "./login-manager.js";
 import { getProblemDetails } from "./leetcode-utils.js";
 import * as fs from "fs";
 
-import { leetcodeOutputChannel } from "../webview/output-logger.js";
+import { leetcodeOutputChannel } from "../output-logger.js";
 import { langToExtentionMap } from "./leetcode-utils.js";
 
 let panel;

@@ -37,7 +37,7 @@ function parseExampleTestcases(exampleStr, paramCount) {
 	return testCases;
 }
 
-export default function TestRunnerPane({ problem }) {
+export default function TestRunnerPane({ problem, onSubmit }) {
 	const metaData = useMemo(() => parseMetaData(problem), [problem]);
 	const paramCount = metaData.params.length;
 
@@ -139,6 +139,14 @@ export default function TestRunnerPane({ problem }) {
 									Run Code
 								</>
 							)}
+						</button>
+						<button
+							onClick={onSubmit}
+							disabled={!problem}
+							className='px-4 py-1.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white transition-colors flex items-center gap-2'
+						>
+							<span>📤</span>
+							Submit
 						</button>
 					</div>
 				</div>
