@@ -96,31 +96,44 @@ export default function ProblemSession({ data, onBack }) {
   }
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col bg-[#1e1e1e] text-gray-200">
+    <div ref={containerRef} className="h-full flex flex-col bg-[#0d1117] text-gray-200">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-700">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-[#0f1419] shadow-lg">
+        <div className="flex items-center gap-4">
           {onBack && (
             <button
               onClick={onBack}
-              className="text-sm px-3 py-1 rounded bg-gray-700 hover:bg-gray-600"
+              className="text-sm px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 border border-gray-600 transition-colors flex items-center gap-2"
             >
               ← Back
             </button>
           )}
-          <h2 className="text-lg font-semibold text-white">
-            {problem?.questionFrontendId ? `${problem.questionFrontendId}. ` : ""}
-            {problem?.title || "Problem"}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-semibold text-white">
+              {problem?.questionFrontendId ? `${problem.questionFrontendId}. ` : ""}
+              {problem?.title || "Problem"}
+            </h2>
+            {problem?.difficulty && (
+              <span className={`px-2 py-1 text-xs font-medium rounded-full border ${
+                problem.difficulty?.toLowerCase() === 'easy' 
+                  ? 'text-green-500 bg-green-500/10 border-green-500/20'
+                  : problem.difficulty?.toLowerCase() === 'medium'
+                  ? 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20'
+                  : 'text-red-500 bg-red-500/10 border-red-500/20'
+              }`}>
+                {problem.difficulty}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Language selector */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {codeSnippets.length > 0 && (
             <>
-              <label className="text-sm text-gray-400">Language:</label>
+              <label className="text-sm text-gray-400 font-medium">Language:</label>
               <select
-                className="bg-[#161616] border border-gray-700 text-gray-200 text-sm rounded px-2 py-1"
+                className="bg-[#161b22] border border-gray-600 text-gray-200 text-sm rounded-lg px-3 py-2 min-w-[120px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition-colors"
                 value={langSlug || ""}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -145,7 +158,7 @@ export default function ProblemSession({ data, onBack }) {
       </div>
 
       {/* Top pane: problem */}
-      <div style={{ height: topHeight ? `${topHeight}px` : "60%" }} className="overflow-auto p-4">
+      <div style={{ height: topHeight ? `${topHeight}px` : "60%" }} className="overflow-hidden">
         <ProblemPane problem={problem} />
       </div>
 
@@ -155,11 +168,13 @@ export default function ProblemSession({ data, onBack }) {
         aria-orientation="horizontal"
         onMouseDown={startDrag}
         onTouchStart={startDrag}
-        className="h-2 bg-gray-800 hover:bg-gray-700 cursor-row-resize"
-      />
+        className="h-2 bg-gray-800 hover:bg-gray-700 cursor-row-resize border-y border-gray-700 flex items-center justify-center group"
+      >
+        <div className="w-8 h-0.5 bg-gray-600 group-hover:bg-gray-500 transition-colors"></div>
+      </div>
 
       {/* Bottom pane: test runner */}
-      <div className="flex-1 overflow-auto p-4 border-t border-gray-700">
+      <div className="flex-1 overflow-hidden">
         <TestRunnerPane problem={problem} />
       </div>
     </div>
