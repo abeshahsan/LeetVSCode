@@ -2,11 +2,11 @@ import path from "path";
 import * as vscode from "vscode";
 import fetch from "node-fetch";
 import { runLoginProcess } from "./login-manager.js";
-import { getAllProblems, getProblemDetails } from "./leetcode-utils.js";
+import { getProblemDetails } from "./leetcode-utils.js";
 import * as fs from "fs";
 
 let panel;
-let allProblems = [];
+
 const output = vscode.window.createOutputChannel("LeetCode Runner");
 
 // Read response body once as text, try JSON.parse, return both
@@ -50,15 +50,7 @@ function getWebviewContent(webview, extensionPath, initialState) {
 </html>`;
 }
 
-async function fetchResponseToWebview(panel, { url, requestId }) {
-	try {
-		const response = await fetch(url);
-		const data = await response.json();
-		panel.webview.postMessage({ command: "fetchResponse", requestId, data });
-	} catch (error) {
-		panel.webview.postMessage({ command: "fetchError", requestId, error: error.message });
-	}
-}
+
 
 export function createOrShowWebview(context) {
 	const savedState = context.globalState.get("leetcode_state") || {};
@@ -78,10 +70,6 @@ export function createOrShowWebview(context) {
 	panel.webview.onDidReceiveMessage(async (message) => {
 		try {
 			switch (message.command) {
-				case "fetch":
-					fetchResponseToWebview(panel, message);
-					break;
-
 				case "login":
 					await runLoginProcess(panel, context);
 					break;
@@ -92,15 +80,7 @@ export function createOrShowWebview(context) {
 					break;
 				}
 
-				case "fetch-problems": {
-					if (allProblems.length === 0) {
-						const data = await getAllProblems();
-						allProblems = data?.problemsetQuestionList?.questions || [];
-					}
-					const slicedProblems = allProblems.slice(40, 90);
-					panel?.webview.postMessage({ command: "problems", data: slicedProblems });
-					break;
-				}
+
 
 				case "open-problem": {
 					const { titleSlug } = message.problem;
