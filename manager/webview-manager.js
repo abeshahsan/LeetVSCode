@@ -100,10 +100,23 @@ export function createOrShowWebview(context) {
 							fs.writeFileSync(filePath, initial, "utf8");
 						}
 						const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
-						await vscode.window.showTextDocument(doc, {
+						// Close all other visible text editors so the opened/created file becomes the only one
+						// First, show the document in a new editor column (or reuse) to get its TextEditor reference
+						const openedEditor = await vscode.window.showTextDocument(doc, {
 							viewColumn: vscode.ViewColumn.Two,
 							preview: false,
 						});
+						// Then, close all other visible text editors excluding the one we just opened
+						for (const editor of vscode.window.visibleTextEditors) {
+							if (editor.document.uri.toString() !== openedEditor.document.uri.toString()) {
+								try {
+									await vscode.window.showTextDocument(editor.document, { preview: false });
+									await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+								} catch (e) {
+									// ignore errors closing individual editors
+								}
+							}
+						}
 					} catch (e) {
 						vscode.window.showErrorMessage(`Failed to open solution file: ${e?.message || e}`);
 					}
