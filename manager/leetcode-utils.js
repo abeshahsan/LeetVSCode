@@ -1,4 +1,4 @@
-export async function getAllProblems() {
+export async function getAllProblems(options) {
 	const body = {
 		operationName: "problemsetQuestionList",
 		variables: {
@@ -35,17 +35,22 @@ export async function getAllProblems() {
                     hasVideoSolution
                     }
                 }
-            }`,
+            }
+				`,
 	};
 
-	let data;
+	let cookies = options?.cookies || [];
+	const cookieStr = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+	const csrftoken = cookies.find((c) => c.name === "csrftoken")?.value;
+
 	try {
 		const res = await fetch("https://leetcode.com/graphql", {
 			method: "POST",
 			headers: {
 				"content-type": "application/json",
 				referer: "https://leetcode.com",
-				// cookie: "LEETCODE_SESSION=<your_session>; csrftoken=<token>",
+				Cookie: cookieStr,
+				"x-csrftoken": csrftoken || "",
 			},
 			body: JSON.stringify(body),
 		});
@@ -79,6 +84,7 @@ export async function getProblemDetails(slug, options) {
 			exampleTestcases
 			acRate
 			likes
+			status
 			dislikes
 		  	topicTags {
 				name
@@ -102,7 +108,7 @@ export async function getProblemDetails(slug, options) {
 				"Content-Type": "application/json",
 				Referer: "https://leetcode.com/problems/",
 				Cookie: cookieStr,
-				"x-csrftoken": csrftoken || "", // <-- required
+				"x-csrftoken": csrftoken || "",
 			},
 			body: JSON.stringify(body),
 		});

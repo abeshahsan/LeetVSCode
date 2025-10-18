@@ -240,7 +240,8 @@ export function createOrShowWebview(context) {
 				case "getAllProblems": {
 					try {
 						leetcodeOutputChannel.appendLine(`[getAllProblems] Fetching all problems`);
-						const data = await getAllProblems();
+						let cookies = context.globalState.get("leetcode_cookies");
+						const data = await getAllProblems({ cookies });
 						const problems = data?.problemsetQuestionList?.questions || [];
 						leetcodeOutputChannel.appendLine(`[getAllProblems] Found ${problems.length} problems`);
 						panel?.webview.postMessage({ command: "allProblems", data: problems });
@@ -257,7 +258,9 @@ export function createOrShowWebview(context) {
 						leetcodeOutputChannel.appendLine(`[getProblemDetails] Fetching details for ${slug}`);
 						const cookies = context.globalState.get("leetcode_cookies");
 						const res = await getProblemDetails(slug, { cookies });
-						leetcodeOutputChannel.appendLine(`[getProblemDetails] Successfully fetched details for ${slug}`);
+						leetcodeOutputChannel.appendLine(
+							`[getProblemDetails] Successfully fetched details for ${slug}`
+						);
 						panel?.webview.postMessage({ command: "problemDetails", data: res });
 					} catch (err) {
 						leetcodeOutputChannel.appendLine(`[getProblemDetails] Error: ${err.message}`);
@@ -280,7 +283,7 @@ export function createOrShowWebview(context) {
 						// Get problem details to get questionId
 						const problemDetails = await getProblemDetails(slug, { cookies });
 						const questionId = problemDetails?.question?.questionId;
-						
+
 						if (!questionId) {
 							throw new Error("Could not get question ID");
 						}
@@ -305,7 +308,8 @@ export function createOrShowWebview(context) {
 						}
 
 						// Map language slug to what LeetCode expects
-						const langToUse = langSlug === "cpp" ? "cpp" : langSlug === "javascript" ? "javascript" : langSlug;
+						const langToUse =
+							langSlug === "cpp" ? "cpp" : langSlug === "javascript" ? "javascript" : langSlug;
 
 						const payload = {
 							lang: langToUse,
@@ -361,7 +365,9 @@ export function createOrShowWebview(context) {
 							});
 
 							const { obj: checkObj, text: checkText } = await readJsonOrText(checkRes);
-							leetcodeOutputChannel.appendLine(`[submit-code] Attempt ${attempt} status: ${checkRes.status}`);
+							leetcodeOutputChannel.appendLine(
+								`[submit-code] Attempt ${attempt} status: ${checkRes.status}`
+							);
 							leetcodeOutputChannel.appendLine(`[submit-code] Attempt ${attempt} response: ${checkText}`);
 
 							if (checkObj?.state === "SUCCESS") {
@@ -374,7 +380,9 @@ export function createOrShowWebview(context) {
 							}
 						}
 
-						leetcodeOutputChannel.appendLine(`[submit-code] Final result: ${JSON.stringify(final, null, 2)}`);
+						leetcodeOutputChannel.appendLine(
+							`[submit-code] Final result: ${JSON.stringify(final, null, 2)}`
+						);
 						panel?.webview.postMessage({ command: "submitResponse", data: final || { error: "Timeout" } });
 					} catch (err) {
 						leetcodeOutputChannel.appendLine(`[submit-code] Error: ${err.message}`);

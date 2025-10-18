@@ -59,8 +59,6 @@ class LeetViewProvider {
 		this.refresh();
 	}
 
-
-
 	getTreeItem(element) {
 		return element;
 	}
@@ -149,9 +147,10 @@ class LeetViewProvider {
 		// === PROBLEMS SECTION ===
 		if (element.label && element.label.startsWith("Problems")) {
 			if (!this._problems.length && !this._loading) {
+				const cookies = this.context.globalState.get("leetcode_cookies");
 				this._loading = true;
 				try {
-					const data = await getAllProblems();
+					const data = await getAllProblems({ cookies });
 					this._problems = data?.problemsetQuestionList?.questions || [];
 				} catch (e) {
 					vscode.window.showErrorMessage(`Failed to load problems: ${e.message || e}`);
@@ -197,10 +196,11 @@ class LeetViewProvider {
 							: q.difficulty === "Medium"
 							? "charts.yellow"
 							: "charts.red"
-						)
-					);
+					)
+				);
 
-				item.description = `${q.difficulty} • ${Math.round(q.acRate)}%`;
+				// Compute a safe, short status label for the tree description
+				item.description = `   ${q?.status === "ac" ? "✅ Solved" : q?.status === "notac" ? "⚠️ Attempted" : ""}`;
 				item.command = {
 					command: "leet.openProblem",
 					title: "Open Problem",
@@ -212,7 +212,6 @@ class LeetViewProvider {
 
 			return items;
 		}
-
 	}
 
 	_applyFilters(problems) {
