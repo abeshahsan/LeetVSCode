@@ -174,18 +174,7 @@ function ProblemPane({ problem }) {
 					<div className="h-full flex flex-col">
 						{/* Problem Header Section */}
 						<div className="border-b border-gray-800 p-4 bg-[#1a1a1a]">
-							<div className="flex items-center justify-between mb-3">
-								<h1 className="text-xl font-semibold text-white">
-									{problem?.frontendQuestionId}. {problem?.title || "Problem"}
-								</h1>
-								<div className="flex items-center gap-2">
-									{problem?.difficulty && (
-										<span className={`px-2 py-1 text-xs font-medium rounded-full border ${getDifficultyColor(problem.difficulty)}`}>
-											{problem.difficulty}
-										</span>
-									)}
-								</div>
-							</div>
+							
 							
 							{/* Stats Row */}
 							<div className="flex items-center gap-6 text-sm text-gray-400">

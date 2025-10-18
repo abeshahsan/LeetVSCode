@@ -71,17 +71,25 @@ export async function getProblemDetails(slug, options) {
         question(titleSlug: $titleSlug) {
           questionId
           questionFrontendId
-					titleSlug
+			titleSlug
 			metaData
-          title
-          content
-          difficulty
-          exampleTestcases
-          codeSnippets {
-            lang
-            langSlug
-            code
-          }
+			title
+			content
+			difficulty
+			exampleTestcases
+			acRate
+			likes
+			dislikes
+		  	topicTags {
+				name
+				id
+				slug
+			}
+			codeSnippets {
+			lang
+			langSlug
+			code
+			}
         }
       }
     `,
