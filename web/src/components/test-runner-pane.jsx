@@ -37,7 +37,7 @@ function parseExampleTestcases(exampleStr, paramCount) {
 	return testCases;
 }
 
-export default function TestRunnerPane({ problem, onSubmit }) {
+export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false }) {
 	const metaData = useMemo(() => parseMetaData(problem), [problem]);
 	const paramCount = metaData.params.length;
 
@@ -142,11 +142,20 @@ export default function TestRunnerPane({ problem, onSubmit }) {
 						</button>
 						<button
 							onClick={onSubmit}
-							disabled={!problem}
+							disabled={!problem || isSubmitting}
 							className='px-4 py-1.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white transition-colors flex items-center gap-2'
 						>
-							<span>📤</span>
-							Submit
+							{isSubmitting ? (
+								<>
+									<span className="animate-spin">⏳</span>
+									Submitting...
+								</>
+							) : (
+								<>
+									<span>📤</span>
+									Submit
+								</>
+							)}
 						</button>
 					</div>
 				</div>

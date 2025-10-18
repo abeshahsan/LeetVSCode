@@ -2,7 +2,7 @@ import path from "path";
 import * as vscode from "vscode";
 import fetch from "node-fetch";
 import { runLoginProcess } from "./login-manager.js";
-import { getProblemDetails } from "./leetcode-utils.js";
+import { getProblemDetails, getAllProblems } from "./leetcode-utils.js";
 import * as fs from "fs";
 
 import { leetcodeOutputChannel } from "../output-logger.js";
@@ -233,6 +233,152 @@ export function createOrShowWebview(context) {
 					} catch (err) {
 						leetcodeOutputChannel.appendLine(`[run-remote] Error: ${err.message}`);
 						panel?.webview.postMessage({ command: "runError", error: String(err) });
+					}
+					break;
+				}
+
+				case "getAllProblems": {
+					try {
+						leetcodeOutputChannel.appendLine(`[getAllProblems] Fetching all problems`);
+						const data = await getAllProblems();
+						const problems = data?.problemsetQuestionList?.questions || [];
+						leetcodeOutputChannel.appendLine(`[getAllProblems] Found ${problems.length} problems`);
+						panel?.webview.postMessage({ command: "allProblems", data: problems });
+					} catch (err) {
+						leetcodeOutputChannel.appendLine(`[getAllProblems] Error: ${err.message}`);
+						panel?.webview.postMessage({ command: "allProblemsError", error: String(err) });
+					}
+					break;
+				}
+
+				case "getProblemDetails": {
+					const { slug } = message;
+					try {
+						leetcodeOutputChannel.appendLine(`[getProblemDetails] Fetching details for ${slug}`);
+						const cookies = context.globalState.get("leetcode_cookies");
+						const res = await getProblemDetails(slug, { cookies });
+						leetcodeOutputChannel.appendLine(`[getProblemDetails] Successfully fetched details for ${slug}`);
+						panel?.webview.postMessage({ command: "problemDetails", data: res });
+					} catch (err) {
+						leetcodeOutputChannel.appendLine(`[getProblemDetails] Error: ${err.message}`);
+						panel?.webview.postMessage({ command: "problemDetailsError", error: String(err) });
+					}
+					break;
+				}
+
+				case "submit-code": {
+					const { slug, langSlug } = message;
+					try {
+						leetcodeOutputChannel.appendLine(`[submit-code] Starting with slug=${slug}, lang=${langSlug}`);
+
+						const cookies = context.globalState.get("leetcode_cookies") || [];
+						leetcodeOutputChannel.appendLine(`[submit-code] Found ${cookies.length} cookies`);
+
+						const cookieStr = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+						const csrftoken = cookies.find((c) => c.name === "csrftoken")?.value || "";
+
+						// Get problem details to get questionId
+						const problemDetails = await getProblemDetails(slug, { cookies });
+						const questionId = problemDetails?.question?.questionId;
+						
+						if (!questionId) {
+							throw new Error("Could not get question ID");
+						}
+
+						leetcodeOutputChannel.appendLine(`[submit-code] Question ID: ${questionId}`);
+
+						// Read the code from the solution file
+						let typed_code = "";
+						try {
+							const solutionsDir = path.join(context.extensionPath, "Solutions");
+							const exts = ["cpp", "java", "py", "js", "ts", "c", "cs", "go"];
+							const found = exts.map((e) => path.join(solutionsDir, `${slug}.${e}`)).find(fs.existsSync);
+							if (found) {
+								typed_code = fs.readFileSync(found, "utf8");
+								leetcodeOutputChannel.appendLine(`[submit-code] Solution loaded from: ${found}`);
+							} else {
+								throw new Error("No solution file found");
+							}
+						} catch (e) {
+							leetcodeOutputChannel.appendLine(`[submit-code] Error reading code: ${e.message}`);
+							throw new Error(`Error reading solution file: ${e.message}`);
+						}
+
+						// Map language slug to what LeetCode expects
+						const langToUse = langSlug === "cpp" ? "cpp" : langSlug === "javascript" ? "javascript" : langSlug;
+
+						const payload = {
+							lang: langToUse,
+							question_id: questionId,
+							typed_code,
+						};
+
+						const url = `https://leetcode.com/problems/${slug}/submit/`;
+						leetcodeOutputChannel.appendLine(`[submit-code] POST ${url}`);
+						leetcodeOutputChannel.appendLine(`[submit-code] Payload: ${JSON.stringify(payload, null, 2)}`);
+
+						const res = await fetch(url, {
+							method: "POST",
+							headers: {
+								"Content-Type": "application/json",
+								Origin: "https://leetcode.com",
+								Referer: `https://leetcode.com/problems/${slug}/`,
+								Cookie: cookieStr,
+								"x-csrftoken": csrftoken,
+							},
+							body: JSON.stringify(payload),
+						});
+
+						const { obj: postObj, text: postText } = await readJsonOrText(res);
+						leetcodeOutputChannel.appendLine(`[submit-code] POST status: ${res.status}`);
+						leetcodeOutputChannel.appendLine(`[submit-code] POST response: ${postText}`);
+
+						const submissionId = postObj?.submission_id;
+						if (!submissionId) {
+							leetcodeOutputChannel.appendLine(`[submit-code] No submission_id returned`);
+							panel?.webview.postMessage({ command: "submitError", error: "No submission_id returned" });
+							return;
+						}
+
+						leetcodeOutputChannel.appendLine(`[submit-code] Submission ID: ${submissionId}`);
+
+						// Poll for submission results
+						const checkUrl = `https://leetcode.com/submissions/detail/${submissionId}/check/`;
+						leetcodeOutputChannel.appendLine(`[submit-code] Polling check URL: ${checkUrl}`);
+
+						let final = null;
+						for (let attempt = 1; attempt <= 60; attempt++) {
+							await new Promise((r) => setTimeout(r, 1000));
+							const checkRes = await fetch(checkUrl, {
+								method: "GET",
+								headers: {
+									"Content-Type": "application/json",
+									Origin: "https://leetcode.com",
+									Referer: `https://leetcode.com/problems/${slug}/`,
+									Cookie: cookieStr,
+									"x-csrftoken": csrftoken,
+								},
+							});
+
+							const { obj: checkObj, text: checkText } = await readJsonOrText(checkRes);
+							leetcodeOutputChannel.appendLine(`[submit-code] Attempt ${attempt} status: ${checkRes.status}`);
+							leetcodeOutputChannel.appendLine(`[submit-code] Attempt ${attempt} response: ${checkText}`);
+
+							if (checkObj?.state === "SUCCESS") {
+								final = checkObj;
+								break;
+							}
+							if (checkObj?.state === "FAILURE" || checkObj?.state === "ERROR") {
+								final = checkObj;
+								break;
+							}
+						}
+
+						leetcodeOutputChannel.appendLine(`[submit-code] Final result: ${JSON.stringify(final, null, 2)}`);
+						panel?.webview.postMessage({ command: "submitResponse", data: final || { error: "Timeout" } });
+					} catch (err) {
+						leetcodeOutputChannel.appendLine(`[submit-code] Error: ${err.message}`);
+						panel?.webview.postMessage({ command: "submitError", error: String(err) });
 					}
 					break;
 				}
