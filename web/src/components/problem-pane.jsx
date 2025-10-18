@@ -402,7 +402,7 @@ function ProblemPane({ problem }) {
 													{submissionResult.lang || "JavaScript"}
 												</div>
 												<div className='text-cyan-400 text-sm font-medium'>
-													✨ Compiled Successfully
+													Compiled Successfully
 												</div>
 											</div>
 										</div>
@@ -546,6 +546,28 @@ function ProblemPane({ problem }) {
 																			</div>
 																			<div className='font-mono text-red-200 bg-red-900/10 p-2 rounded border'>
 																				{submissionResult.code_output}
+																			</div>
+																		</div>
+																	)}
+
+																	{submissionResult.std_output_list && (
+																		<div className='bg-blue-900/20 border border-blue-600/30 rounded-lg p-3'>
+																			<div className='flex items-center mb-2'>
+																				<span className='text-blue-400 mr-2'>
+																					📋
+																				</span>
+																				<span className='text-blue-300 font-semibold text-sm'>
+																					Standard Output
+																				</span>
+																			</div>
+																			<div className='font-mono text-blue-200 bg-blue-900/10 p-2 rounded border whitespace-pre-wrap'>
+																				{Array.isArray(
+																					submissionResult.std_output_list
+																				)
+																					? submissionResult.std_output_list.join(
+																							"\n"
+																					  )
+																					: submissionResult.std_output_list}
 																			</div>
 																		</div>
 																	)}

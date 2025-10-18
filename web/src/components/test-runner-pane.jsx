@@ -381,6 +381,16 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 																		</div>
 																	</div>
 																</div>
+
+																{/* Standard Output */}
+																{data.std_output_list && data.std_output_list[i] && (
+																	<div className='mt-3'>
+																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-1'>Standard Output</div>
+																		<div className='font-mono text-xs bg-blue-900/10 border border-blue-600/30 p-2 rounded text-blue-300 break-all whitespace-pre-wrap'>
+																			{data.std_output_list[i] || "(empty)"}
+																		</div>
+																	</div>
+																)}
 															</div>
 														</div>
 													);
