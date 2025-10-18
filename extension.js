@@ -59,6 +59,8 @@ class LeetViewProvider {
 		this.refresh();
 	}
 
+
+
 	getTreeItem(element) {
 		return element;
 	}
@@ -173,9 +175,9 @@ class LeetViewProvider {
 			let filtered = this._applyFilters(this._problems);
 
 			// Cap for performance
-			const limited = filtered.slice(0, 200);
+			const limited = filtered;
 
-			return limited.map((q) => {
+			const items = limited.map((q) => {
 				const label = `${q.frontendQuestionId}. ${q.title}`;
 				const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
 
@@ -195,8 +197,8 @@ class LeetViewProvider {
 							: q.difficulty === "Medium"
 							? "charts.yellow"
 							: "charts.red"
-					)
-				);
+						)
+					);
 
 				item.description = `${q.difficulty} • ${Math.round(q.acRate)}%`;
 				item.command = {
@@ -207,9 +209,10 @@ class LeetViewProvider {
 
 				return item;
 			});
+
+			return items;
 		}
 
-		return [];
 	}
 
 	_applyFilters(problems) {

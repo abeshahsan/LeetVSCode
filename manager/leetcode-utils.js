@@ -1,10 +1,10 @@
-import * as vscode from "vscode";
-
 export async function getAllProblems() {
 	const body = {
 		operationName: "problemsetQuestionList",
 		variables: {
 			categorySlug: "",
+			limit: 4000,
+			skip: 0,
 			filters: {},
 		},
 		query: `
