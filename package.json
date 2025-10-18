@@ -1,135 +1,203 @@
 {
-  "name": "webview",
-  "publisher": "abeshahsan",
-  "displayName": "webview",
-  "description": "",
-  "type": "module",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.104.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "main": "./extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "webview.leetcode",
-        "title": "Leetcode"
-      },
-      {
-        "command": "webview.openWebview",
-        "title": "Open LeetCode",
-        "icon": {
-          "light": "resources/icon.svg",
-          "dark": "resources/icon.svg"
-        }
-      },
-      {
-        "command": "leet.signIn",
-        "title": "Sign In to LeetCode",
-        "icon": "$(account)"
-      },
-      {
-        "command": "leet.openProblem",
-        "title": "Open LeetCode Problem"
-      }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "leet",
-          "title": "LeetCode",
-          "icon": "resources/icon.svg"
-        }
-      ]
-    },
-    "views": {
-      "leet": [
-        {
-          "id": "leetView",
-          "name": "LeetCode",
-          "icon": "resources/icon.svg"
-        }
-      ]
-    },
-    "viewsWelcome": [
-      {
-        "view": "leetView",
-        "contents": "# LeetCode\n[Open LeetCode](command:webview.openWebview) · [Sign In](command:leet.signIn)"
-      }
-    ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "webview.openWebview",
-          "when": "view == leetView",
-          "group": "navigation@1"
-        },
-        {
-          "command": "leet.signIn",
-          "when": "view == leetView",
-          "group": "navigation@2"
-        }
-      ]
-    },
-    "customEditors": [
-      {
-        "viewType": "leetcode.problemView",
-        "displayName": "LeetCode Problem Viewer",
-        "selector": [
-          { "filenamePattern": "*.leetcode-problem" }
-        ]
-      },
-      {
-        "viewType": "leetcode.problemList",
-        "displayName": "LeetCode Problems List",
-        "selector": [
-          { "filenamePattern": "*.leetcode-list" }
-        ]
-      },
-      {
-        "viewType": "leetcode.problemSession",
-        "displayName": "LeetCode Problem Session",
-        "selector": [
-          { "filenamePattern": "*.leetcode-session" }
-        ]
-      }
-    ],
-    "configuration": {
-      "type": "object",
-      "title": "Webview Extension",
-      "properties": {
-        "webview.autoShow": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically show the webview when VS Code starts. Set to false to disable automatic opening."
-        }
-      }
-    }
-  },
-  "scripts": {
-    "lint": "eslint .",
-    "pretest": "npm run lint",
-    "test": "vscode-test"
-  },
-  "devDependencies": {
-    "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
-    "@types/vscode": "^1.104.0",
-    "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.36.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.18"
-  },
-  "dependencies": {
-    "node-fetch": "^3.3.2",
-    "playwright": "^1.56.0"
-  }
+	"name": "webview",
+	"publisher": "abeshahsan",
+	"displayName": "webview",
+	"description": "LeetCode VS Code integration with webview and filters",
+	"type": "module",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.104.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onStartupFinished"
+	],
+	"main": "./extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "webview.leetcode",
+				"title": "LeetCode"
+			},
+			{
+				"command": "webview.openWebview",
+				"title": "Open LeetCode",
+				"icon": {
+					"light": "resources/icon.svg",
+					"dark": "resources/icon.svg"
+				}
+			},
+			{
+				"command": "leet.signIn",
+				"title": "Sign In to LeetCode",
+				"icon": "$(account)"
+			},
+			{
+				"command": "leet.openProblem",
+				"title": "Open LeetCode Problem"
+			},
+			{
+				"command": "leet.filterEasy",
+				"title": "Filter Easy Problems",
+				"icon": "$(check-circle)"
+			},
+			{
+				"command": "leet.filterMedium",
+				"title": "Filter Medium Problems",
+				"icon": "$(circle-large-outline)"
+			},
+			{
+				"command": "leet.filterHard",
+				"title": "Filter Hard Problems",
+				"icon": "$(flame)"
+			},
+			{
+				"command": "leet.clearFilter",
+				"title": "Clear Filters",
+				"icon": "$(clear-all)"
+			},
+			{
+				"command": "leet.search",
+				"title": "Search Problems",
+				"icon": "$(search)"
+			},
+			{
+				"command": "leet.filterByTag",
+				"title": "Filter by Tag",
+				"icon": "$(tag)"
+			},
+			{
+				"command": "leet.addTag",
+				"title": "Add Tag Filter",
+				"icon": "$(tag)"
+			},
+			{
+				"command": "leet.removeTag",
+				"title": "Remove Tag Filter",
+				"icon": "$(circle-slash)"
+			},
+			{
+				"command": "leet.refresh",
+				"title": "Refresh Problems",
+				"icon": "$(refresh)"
+			}
+		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "leet",
+					"title": "LeetCode",
+					"icon": "resources/icon.svg"
+				}
+			]
+		},
+		"views": {
+			"leet": [
+				{
+					"id": "leetView",
+					"name": "LeetCode",
+					"icon": "resources/icon.svg"
+				}
+			]
+		},
+		"viewsWelcome": [
+			{
+				"view": "leetView",
+				"contents": "# LeetCode\n[Open LeetCode](command:webview.openWebview) · [Sign In](command:leet.signIn)"
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "webview.openWebview",
+					"when": "view == leetView",
+					"group": "navigation@1"
+				},
+				{
+					"command": "leet.signIn",
+					"when": "view == leetView",
+					"group": "navigation@2"
+				},
+				{
+					"command": "leet.refresh",
+					"when": "view == leetView && viewItem == filtersRoot",
+					"group": "navigation@3"
+				},
+				{
+					"command": "leet.clearFilter",
+					"when": "view == leetView && viewItem == filtersRoot",
+					"group": "navigation@4"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "leet.removeTag",
+					"when": "view == leetView && viewItem == tagItem",
+					"group": "inline"
+				}
+			]
+		},
+		"customEditors": [
+			{
+				"viewType": "leetcode.problemView",
+				"displayName": "LeetCode Problem Viewer",
+				"selector": [
+					{
+						"filenamePattern": "*.leetcode-problem"
+					}
+				]
+			},
+			{
+				"viewType": "leetcode.problemList",
+				"displayName": "LeetCode Problems List",
+				"selector": [
+					{
+						"filenamePattern": "*.leetcode-list"
+					}
+				]
+			},
+			{
+				"viewType": "leetcode.problemSession",
+				"displayName": "LeetCode Problem Session",
+				"selector": [
+					{
+						"filenamePattern": "*.leetcode-session"
+					}
+				]
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Webview Extension",
+			"properties": {
+				"webview.autoShow": {
+					"type": "boolean",
+					"default": true,
+					"description": "Automatically show the webview when VS Code starts. Set to false to disable automatic opening."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"pretest": "npm run lint",
+		"test": "vscode-test"
+	},
+	"devDependencies": {
+		"@types/mocha": "^10.0.10",
+		"@types/node": "22.x",
+		"@types/vscode": "^1.104.0",
+		"@vscode/test-cli": "^0.0.11",
+		"@vscode/test-electron": "^2.5.2",
+		"autoprefixer": "^10.4.21",
+		"eslint": "^9.36.0",
+		"postcss": "^8.5.6",
+		"tailwindcss": "^3.4.18"
+	},
+	"dependencies": {
+		"node-fetch": "^3.3.2",
+		"playwright": "^1.56.0"
+	}
 }

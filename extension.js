@@ -2,164 +2,385 @@ import { createOrShowWebview, notifySession, openProblemFromExtension } from "./
 import * as vscode from "vscode";
 import { getAllProblems } from "./manager/leetcode-utils.js";
 
+/**
+ * LeetViewProvider
+ * Handles the LeetCode sidebar tree view in VS Code.
+ */
 class LeetViewProvider {
 	constructor(context) {
 		this.context = context;
 		this._onDidChangeTreeData = new vscode.EventEmitter();
 		this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+
 		this._problems = [];
 		this._loading = false;
+		this._filters = []; // Array of "Easy" | "Medium" | "Hard"
+		this._searchTerm = null;
+		this._tagFilters = []; // Array of tag names
 	}
 
 	refresh() {
 		this._onDidChangeTreeData.fire();
 	}
 
+	async forceRefresh() {
+		this._problems = [];
+		this._loading = false;
+		this.refresh();
+	}
+
+	toggleFilter(level) {
+		if (this._filters.includes(level)) {
+			this._filters = this._filters.filter((f) => f !== level);
+		} else {
+			this._filters.push(level);
+		}
+		this.refresh();
+	}
+
+	clearFilters() {
+		this._filters = [];
+		this._searchTerm = null;
+		this._tagFilters = [];
+		this.refresh();
+	}
+
+	setSearch(term) {
+		this._searchTerm = term;
+		this.refresh();
+	}
+
+	toggleTagFilter(tag) {
+		if (this._tagFilters.includes(tag)) {
+			this._tagFilters = this._tagFilters.filter((t) => t !== tag);
+		} else {
+			this._tagFilters.push(tag);
+		}
+		this.refresh();
+	}
+
 	getTreeItem(element) {
 		return element;
 	}
 
-	// VS Code will call this for each collapsible element to get its children
 	async getChildren(element) {
 		const cookies = this.context.globalState.get("leetcode_cookies");
 		const loggedIn = Array.isArray(cookies) && cookies.length > 0;
 
+		// === ROOT LEVEL ===
 		if (!element) {
-			// Top level items handled in getChildren()
-			const top = [];
 			if (!loggedIn) {
-				const signin = new vscode.TreeItem("Sign In", vscode.TreeItemCollapsibleState.None);
-				signin.command = { command: "leet.signIn", title: "Sign In" };
-				signin.iconPath = new vscode.ThemeIcon("account");
-				signin.description = "Login with browser";
-				top.push(signin);
-				return top;
+				const signIn = new vscode.TreeItem("Sign in to LeetCode", vscode.TreeItemCollapsibleState.None);
+				signIn.command = { command: "leet.signIn", title: "Sign In" };
+				signIn.iconPath = new vscode.ThemeIcon("account");
+				signIn.description = "Click to authenticate";
+				return [signIn];
 			}
 
-			const problemsRoot = new vscode.TreeItem("Problems", vscode.TreeItemCollapsibleState.Expanded);
-			problemsRoot.iconPath = new vscode.ThemeIcon("list-selection");
-			return [problemsRoot];
+			const filtersRoot = new vscode.TreeItem("Filters", vscode.TreeItemCollapsibleState.Expanded);
+			filtersRoot.iconPath = new vscode.ThemeIcon("filter");
+			// mark filters root so view/title menu items can target it
+			filtersRoot.contextValue = "filtersRoot";
+
+			const problemsLabel = this._buildProblemsLabel();
+			const problemsRoot = new vscode.TreeItem(problemsLabel, vscode.TreeItemCollapsibleState.Expanded);
+			problemsRoot.iconPath = new vscode.ThemeIcon("list-tree");
+
+			return [filtersRoot, problemsRoot];
 		}
 
-		// Children for Problems root
-		if (element.label === "Problems") {
-			// Lazy-load problems list
+		// === FILTERS SECTION ===
+		if (element.label === "Filters") {
+			const items = [];
+
+			// Search
+			const searchItem = new vscode.TreeItem(
+				this._searchTerm ? `Search: "${this._searchTerm}"` : "Search Problems",
+				vscode.TreeItemCollapsibleState.None
+			);
+			searchItem.command = { command: "leet.search", title: "Search" };
+			searchItem.iconPath = new vscode.ThemeIcon("search");
+			searchItem.description = this._searchTerm ? "Click to modify" : "";
+			items.push(searchItem);
+
+			// Difficulty filters
+			const levels = ["Easy", "Medium", "Hard"];
+			for (const level of levels) {
+				const active = this._filters.includes(level);
+				const item = new vscode.TreeItem(level, vscode.TreeItemCollapsibleState.None);
+				item.iconPath = new vscode.ThemeIcon(
+					active ? "check" : "circle-outline",
+					new vscode.ThemeColor(
+						level === "Easy" ? "charts.green" : level === "Medium" ? "charts.yellow" : "charts.red"
+					)
+				);
+				item.command = {
+					command: `leet.toggle${level}`,
+					title: `Toggle ${level}`,
+				};
+				item.description = active ? "✓" : "";
+				items.push(item);
+			}
+
+			// Tag filters section
+			if (this._tagFilters.length > 0) {
+				// Show active tags
+				for (const tag of this._tagFilters) {
+					const tagItem = new vscode.TreeItem(`#${tag}`, vscode.TreeItemCollapsibleState.None);
+					tagItem.iconPath = new vscode.ThemeIcon("tag", new vscode.ThemeColor("charts.blue"));
+					tagItem.command = { command: "leet.removeTag", title: "Remove Tag", arguments: [tag] };
+					tagItem.description = "✓ Click to remove";
+					items.push(tagItem);
+				}
+			}
+
+			// Add new tag option
+			const addTagItem = new vscode.TreeItem("+ Add Tag Filter", vscode.TreeItemCollapsibleState.None);
+			addTagItem.iconPath = new vscode.ThemeIcon("add");
+			addTagItem.command = { command: "leet.addTag", title: "Add Tag Filter" };
+			addTagItem.description = "Select tags";
+			items.push(addTagItem);
+
+			return items;
+		}
+
+		// === PROBLEMS SECTION ===
+		if (element.label && element.label.startsWith("Problems")) {
 			if (!this._problems.length && !this._loading) {
 				this._loading = true;
 				try {
 					const data = await getAllProblems();
 					this._problems = data?.problemsetQuestionList?.questions || [];
 				} catch (e) {
-					vscode.window.showErrorMessage(`Failed to load problems: ${e?.message || e}`);
+					vscode.window.showErrorMessage(`Failed to load problems: ${e.message || e}`);
 				} finally {
 					this._loading = false;
 				}
 			}
 
-			if (!this._problems.length) {
+			if (this._loading) {
 				const loading = new vscode.TreeItem("Loading problems...", vscode.TreeItemCollapsibleState.None);
 				loading.iconPath = new vscode.ThemeIcon("sync~spin");
 				return [loading];
 			}
 
-			// Build list items (limit to first 100 to keep sidebar snappy)
-			const list = this._problems.slice(0, 100).map((q) => {
+			if (!this._problems.length) {
+				const empty = new vscode.TreeItem("No problems found.", vscode.TreeItemCollapsibleState.None);
+				empty.iconPath = new vscode.ThemeIcon("warning");
+				return [empty];
+			}
+
+			let filtered = this._applyFilters(this._problems);
+
+			// Cap for performance
+			const limited = filtered.slice(0, 200);
+
+			return limited.map((q) => {
 				const label = `${q.frontendQuestionId}. ${q.title}`;
 				const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-				item.tooltip = `${q.difficulty} • ${q.titleSlug}`;
+
+				const tags = q.topicTags
+					?.slice(0, 3)
+					.map((t) => t.name)
+					.join(", ");
+				const tagText = tags ? ` • ${tags}` : "";
+
+				item.tooltip = `${q.difficulty} • ${Math.round(q.acRate)}%${tagText}`;
+
 				item.iconPath = new vscode.ThemeIcon(
-					q.difficulty === "Hard" ? "flame" : q.difficulty === "Medium" ? "beaker" : "circle-outline"
+					"circle-filled",
+					new vscode.ThemeColor(
+						q.difficulty === "Easy"
+							? "charts.green"
+							: q.difficulty === "Medium"
+							? "charts.yellow"
+							: "charts.red"
+					)
 				);
+
+				item.description = `${q.difficulty} • ${Math.round(q.acRate)}%`;
 				item.command = {
 					command: "leet.openProblem",
 					title: "Open Problem",
 					arguments: [q.titleSlug],
 				};
+
 				return item;
 			});
-			return list;
 		}
 
 		return [];
 	}
+
+	_applyFilters(problems) {
+		let result = [...problems];
+
+		// Apply difficulty filters (OR logic - if any difficulty is selected)
+		if (this._filters.length > 0) {
+			result = result.filter((q) => this._filters.includes(q.difficulty));
+		}
+
+		// Apply search filter
+		if (this._searchTerm) {
+			const s = this._searchTerm.toLowerCase();
+			result = result.filter((q) => {
+				const id = q.frontendQuestionId?.toString() ?? "";
+				const title = q.title?.toLowerCase() ?? "";
+				const slug = q.titleSlug?.toLowerCase() ?? "";
+				return id.includes(s) || title.includes(s) || slug.includes(s);
+			});
+		}
+
+		// Apply tag filters (AND logic - problem must have ALL selected tags)
+		if (this._tagFilters.length > 0) {
+			result = result.filter((q) => {
+				if (!q.topicTags) return false;
+				const problemTags = q.topicTags.map((t) => t.name.toLowerCase());
+				return this._tagFilters.every((tag) => problemTags.includes(tag.toLowerCase()));
+			});
+		}
+
+		return result;
+	}
+
+	_buildProblemsLabel() {
+		const parts = [];
+		if (this._filters.length > 0) parts.push(this._filters.join("+"));
+		if (this._searchTerm) parts.push(`"${this._searchTerm}"`);
+		if (this._tagFilters.length > 0) parts.push(this._tagFilters.map((t) => `#${t}`).join("+"));
+		return parts.length ? `Problems (${parts.join(" | ")})` : "Problems";
+	}
 }
 
+// ==========================
+// Activation Function
+// ==========================
 export function activate(context) {
-	// Ensure we have a command to open the main webview
-	const openCmd = vscode.commands.registerCommand("webview.openWebview", () => {
-		createOrShowWebview(context);
-	});
-	context.subscriptions.push(openCmd);
-
-	const signInCmd = vscode.commands.registerCommand("leet.signIn", async () => {
-		try {
-			const { runLoginProcess } = await import("./manager/login-manager.js");
-			// Use the existing panel if available, or just pass undefined
-			await runLoginProcess(undefined, context);
-		} catch (e) {
-			vscode.window.showErrorMessage(`Login failed: ${e?.message || e}`);
-		}
-	});
-	context.subscriptions.push(signInCmd);
-
-	// Register Activity Bar view provider
 	const provider = new LeetViewProvider(context);
+	context.subscriptions.push(vscode.window.registerTreeDataProvider("leetView", provider));
+
+	// Core commands
 	context.subscriptions.push(
-		vscode.window.registerTreeDataProvider("leetView", provider)
+		vscode.commands.registerCommand("leet.openProblem", async (slug) => {
+			if (slug) await openProblemFromExtension(context, slug);
+		}),
+		vscode.commands.registerCommand("leet.refresh", async () => {
+			vscode.window.showInformationMessage("🔄 Refreshing problems...");
+			await provider.forceRefresh();
+			// vscode.window.showInformationMessage("✅ Problems refreshed");
+		}),
+		vscode.commands.registerCommand("leet.clearFilter", () => {
+			provider.clearFilters();
+			vscode.window.showInformationMessage("🧹 Filters cleared");
+		}),
+		vscode.commands.registerCommand("leet.search", async () => {
+			const term = await vscode.window.showInputBox({
+				prompt: "Search problems by ID or title",
+				placeHolder: "e.g. 1, Two Sum",
+				value: provider._searchTerm || "",
+			});
+			if (term !== undefined) {
+				provider.setSearch(term.trim() || null);
+			}
+		}),
+		vscode.commands.registerCommand("leet.toggleEasy", () => {
+			provider.toggleFilter("Easy");
+		}),
+		vscode.commands.registerCommand("leet.toggleMedium", () => {
+			provider.toggleFilter("Medium");
+		}),
+		vscode.commands.registerCommand("leet.toggleHard", () => {
+			provider.toggleFilter("Hard");
+		}),
+		vscode.commands.registerCommand("leet.addTag", async () => {
+			const allTags = new Set();
+			provider._problems.forEach((p) => p.topicTags?.forEach((t) => allTags.add(t.name)));
+
+			const allTagsList = Array.from(allTags).sort();
+
+			if (!allTagsList.length) {
+				vscode.window.showWarningMessage("No tags available or all problems need to be loaded first.");
+				return;
+			}
+
+			// Create persistent tag selection loop
+			while (true) {
+				// Add "Done" option at the top
+				const tagItems = [
+					{
+						label: "✅ Done",
+						description: "Finish selecting tags",
+						tag: null,
+					},
+					...allTagsList.map((tag) => {
+						const isSelected = provider._tagFilters.includes(tag);
+						return {
+							label: `${isSelected ? "☑️" : "☐"} ${tag}`,
+							description: isSelected ? "Selected" : "",
+							tag: tag,
+						};
+					}),
+				];
+
+				const selected = await vscode.window.showQuickPick(tagItems, {
+					placeHolder: `Select tags to toggle (${provider._tagFilters.length} selected) | Click "Done" to finish`,
+				});
+
+				// If user cancels or clicks Done, exit the loop
+				if (!selected || selected.tag === null) {
+					break;
+				}
+
+				// Toggle the selected tag
+				provider.toggleTagFilter(selected.tag);
+				// Refresh the tree view immediately to show changes
+				provider.refresh();
+			}
+		}),
+		vscode.commands.registerCommand("leet.removeTag", (tag) => {
+			provider.toggleTagFilter(tag);
+		})
 	);
 
-	// Command to open a problem from the sidebar by slug
-	const openProblemCmd = vscode.commands.registerCommand("leet.openProblem", async (slug) => {
-		if (!slug) return;
-		await openProblemFromExtension(context, slug);
-	});
-	context.subscriptions.push(openProblemCmd);
+	// Login and logout commands
+	context.subscriptions.push(
+		vscode.commands.registerCommand("leet.signIn", async () => {
+			try {
+				const { runLoginProcess } = await import("./manager/login-manager.js");
+				await runLoginProcess(undefined, context);
+			} catch (e) {
+				vscode.window.showErrorMessage(`Login failed: ${e.message}`);
+			}
+		}),
+		vscode.commands.registerCommand("leet.logout", async () => {
+			await context.globalState.update("leetcode_cookies", null);
+			await context.globalState.update("leetcode_user", null);
+			vscode.window.showInformationMessage("Logged out successfully.");
+			await refreshStatus();
+		})
+	);
 
-	// Do not auto-open the webview; it will open when a problem is selected or user clicks the command
+	// Status bar
+	const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+	status.command = "leet.logout";
+	context.subscriptions.push(status);
 
-	// Create a status bar item for logout (hidden when not logged in)
-	const statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-	statusItem.command = "leet.logout";
-	context.subscriptions.push(statusItem);
-
-	// Helper to refresh status bar and sidebar based on global state
 	async function refreshStatus() {
 		const cookies = context.globalState.get("leetcode_cookies");
-		if (cookies && cookies.length) {
-			statusItem.text = "$(sign-out) Leet: Logout";
-			statusItem.tooltip = "Logout from LeetCode";
-			statusItem.show();
+		if (cookies?.length) {
+			status.text = "$(sign-out) Logout";
+			status.tooltip = "Logout from LeetCode";
+			status.show();
 			notifySession(true);
-			await vscode.commands.executeCommand('setContext', 'leet.loggedIn', true);
 		} else {
-			statusItem.hide();
+			status.hide();
 			notifySession(false);
-			await vscode.commands.executeCommand('setContext', 'leet.loggedIn', false);
-			// Clear cached problems on logout
 			provider._problems = [];
 		}
-		// refresh sidebar view items visibility
 		provider.refresh();
 	}
 
-	// Expose a command other parts of the extension can call to refresh the status
-	const refreshCommand = vscode.commands.registerCommand("leet.refreshStatus", async () => {
-		await refreshStatus();
-	});
-	context.subscriptions.push(refreshCommand);
-
-	// Register logout command
-	const logoutCommand = vscode.commands.registerCommand("leet.logout", async (passedContext) => {
-		// Allow being called with either the extension context or nothing
-		const ctx = passedContext || context;
-		await ctx.globalState.update("leetcode_cookies", null);
-		await ctx.globalState.update("leetcode_user", null);
-		vscode.window.showInformationMessage("Logged out successfully.");
-		refreshStatus();
-	});
-	context.subscriptions.push(logoutCommand);
-
-	// Refresh status on activation
+	context.subscriptions.push(vscode.commands.registerCommand("leet.refreshStatus", refreshStatus));
 	refreshStatus();
 }
 
