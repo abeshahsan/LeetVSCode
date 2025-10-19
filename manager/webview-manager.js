@@ -53,11 +53,18 @@ function getWebviewContent(webview, extensionPath, initialState) {
 export function createOrShowWebview(context) {
 	const savedState = context.globalState.get("leetcode_state") || {};
 
+	// Check if panel exists and is not disposed
 	if (panel) {
-		panel.reveal(vscode.ViewColumn.One);
-		return;
+		try {
+			panel.reveal(vscode.ViewColumn.One);
+			return panel;
+		} catch (error) {
+			// Panel is disposed, set to null and create a new one
+			panel = null;
+		}
 	}
 
+	// Create new panel if none exists or if the existing one is disposed
 	panel = vscode.window.createWebviewPanel("webview", "LeetVSCode", vscode.ViewColumn.One, {
 		enableScripts: true,
 		retainContextWhenHidden: true,

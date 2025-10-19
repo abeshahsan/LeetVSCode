@@ -127,11 +127,23 @@ function ProblemPane({ problem }) {
 						last_testcase: data.last_testcase,
 						expected_output: data.expected_output,
 						code_output: data.code_output,
+						std_output_list: data.std_output_list,
 						submission_id: data.submission_id,
+						
+						// Add error details
+						compile_error: data.compile_error,
+						full_compile_error: data.full_compile_error,
+						runtime_error: data.runtime_error,
+						full_runtime_error: data.full_runtime_error,
+						run_success: data.run_success,
 					};
 
-					// Add error details for failed submissions
-					if (data.status_msg !== "Accepted" && data.state !== "SUCCESS") {
+					// Add error messages for failed submissions
+					if (data.compile_error || data.status_msg === "Compile Error") {
+						result.message = "Compilation failed. Please fix the syntax errors.";
+					} else if (data.runtime_error || data.status_msg === "Runtime Error") {
+						result.message = "Runtime error occurred during execution.";
+					} else if (data.status_msg !== "Accepted" && data.state !== "SUCCESS") {
 						result.message = `Wrong Answer - Failed on test case ${(data.total_correct || 0) + 1}`;
 					}
 
@@ -404,6 +416,80 @@ function ProblemPane({ problem }) {
 												<div className='text-cyan-400 text-sm font-medium'>
 													Compiled Successfully
 												</div>
+											</div>
+										</div>
+									)}
+
+									{/* Show compilation errors */}
+									{(submissionResult.compile_error || submissionResult.full_compile_error || submissionResult.status === "Compile Error") && (
+										<div className='mt-8'>
+											<div className='flex items-center mb-4'>
+												<span className='text-2xl mr-3'>🔧</span>
+												<h3 className='text-xl font-bold text-white'>Compilation Error</h3>
+											</div>
+											<div className='bg-gradient-to-br from-orange-900/30 to-red-900/30 rounded-xl p-6 border border-orange-500/50 shadow-lg backdrop-blur-sm'>
+												<div className='flex items-center mb-4'>
+													<span className='text-orange-400 text-2xl mr-3'>⚠️</span>
+													<div>
+														<div className='text-orange-300 text-lg font-bold'>
+															Compilation Failed
+														</div>
+														<div className='text-orange-400 text-sm'>
+															Please fix the syntax errors in your code
+														</div>
+													</div>
+												</div>
+												<div className='bg-orange-950/50 border border-orange-700/30 rounded-lg p-4'>
+													<div className='text-orange-300 font-medium text-sm mb-2'>Error Details:</div>
+													<pre className='font-mono text-orange-200 text-xs whitespace-pre-wrap overflow-x-auto'>
+														{submissionResult.full_compile_error || submissionResult.compile_error || "No error details available"}
+													</pre>
+												</div>
+											</div>
+										</div>
+									)}
+
+									{/* Show runtime errors */}
+									{(submissionResult.runtime_error || submissionResult.full_runtime_error || submissionResult.status === "Runtime Error") && (
+										<div className='mt-8'>
+											<div className='flex items-center mb-4'>
+												<span className='text-2xl mr-3'>⚠️</span>
+												<h3 className='text-xl font-bold text-white'>Runtime Error</h3>
+											</div>
+											<div className='bg-gradient-to-br from-purple-900/30 to-red-900/30 rounded-xl p-6 border border-purple-500/50 shadow-lg backdrop-blur-sm'>
+												<div className='flex items-center mb-4'>
+													<span className='text-purple-400 text-2xl mr-3'>💥</span>
+													<div>
+														<div className='text-purple-300 text-lg font-bold'>
+															Runtime Error Occurred
+														</div>
+														<div className='text-purple-400 text-sm'>
+															Your code encountered an error during execution
+														</div>
+													</div>
+												</div>
+												<div className='bg-purple-950/50 border border-purple-700/30 rounded-lg p-4'>
+													<div className='text-purple-300 font-medium text-sm mb-2'>Error Details:</div>
+													<pre className='font-mono text-purple-200 text-xs whitespace-pre-wrap overflow-x-auto'>
+														{submissionResult.full_runtime_error || submissionResult.runtime_error || "No error details available"}
+													</pre>
+												</div>
+											</div>
+										</div>
+									)}
+
+									{/* Debug: Show raw submission data when errors occur */}
+									{(submissionResult.status !== "Accepted" && submissionResult.run_success === false) && (
+										<div className='mt-8'>
+											<div className='flex items-center mb-4'>
+												<span className='text-2xl mr-3'>🐛</span>
+												<h3 className='text-xl font-bold text-white'>Debug Info</h3>
+											</div>
+											<div className='bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl p-6 border border-gray-600/50 shadow-lg backdrop-blur-sm'>
+												<div className='text-gray-300 font-medium text-sm mb-2'>Raw Response Data:</div>
+												<pre className='font-mono text-gray-200 text-xs whitespace-pre-wrap overflow-x-auto bg-gray-950/50 border border-gray-700/30 rounded p-3 max-h-60 overflow-y-auto'>
+													{JSON.stringify(submissionResult, null, 2)}
+												</pre>
 											</div>
 										</div>
 									)}

@@ -259,6 +259,83 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 						{remoteResults.type === "response" &&
 							(() => {
 								const data = remoteResults.data;
+								
+								// Handle compilation errors
+								if (data?.compile_error || data?.full_compile_error || data?.status_msg === "Compile Error") {
+									return (
+										<div className='p-4 rounded-lg border border-orange-600/50 bg-orange-900/20'>
+											<div className='flex items-center gap-2 mb-3'>
+												<span className='text-orange-400 text-lg'>🔧</span>
+												<div className='text-orange-300 font-semibold'>Compilation Error</div>
+											</div>
+											<div className='bg-orange-950/50 border border-orange-700/30 rounded-lg p-3'>
+												<div className='text-orange-300 font-medium text-sm mb-2'>Error Details:</div>
+												<div className='font-mono text-orange-200 text-xs whitespace-pre-wrap'>
+													{data.full_compile_error || data.compile_error || "No error details available"}
+												</div>
+											</div>
+										</div>
+									);
+								}
+								
+								// Handle runtime errors  
+								if (data?.runtime_error || data?.full_runtime_error || data?.status_msg === "Runtime Error") {
+									return (
+										<div className='p-4 rounded-lg border border-purple-600/50 bg-purple-900/20'>
+											<div className='flex items-center gap-2 mb-3'>
+												<span className='text-purple-400 text-lg'>⚠️</span>
+												<div className='text-purple-300 font-semibold'>Runtime Error</div>
+											</div>
+											<div className='bg-purple-950/50 border border-purple-700/30 rounded-lg p-3'>
+												<div className='text-purple-300 font-medium text-sm mb-2'>Error Details:</div>
+												<div className='font-mono text-purple-200 text-xs whitespace-pre-wrap'>
+													{data.full_runtime_error || data.runtime_error || "No error details available"}
+												</div>
+											</div>
+										</div>
+									);
+								}
+								
+								// Handle other errors based on run_success flag
+								if (data?.run_success === false && data?.status_msg && data?.status_msg !== "Compile Error" && data?.status_msg !== "Runtime Error") {
+									return (
+										<div className='p-4 rounded-lg border border-red-600/50 bg-red-900/20'>
+											<div className='flex items-center gap-2 mb-3'>
+												<span className='text-red-400 text-lg'>❌</span>
+												<div className='text-red-300 font-semibold'>{data.status_msg}</div>
+											</div>
+											{data.error_message && (
+												<div className='bg-red-950/50 border border-red-700/30 rounded-lg p-3'>
+													<div className='text-red-300 font-medium text-sm mb-2'>Error Details:</div>
+													<div className='font-mono text-red-200 text-xs whitespace-pre-wrap'>
+														{data.error_message}
+													</div>
+												</div>
+											)}
+										</div>
+									);
+								}
+
+								// Add debug info for failed runs
+								if (data?.run_success === false || data?.status_msg === "Compile Error" || data?.status_msg === "Runtime Error") {
+									return (
+										<div className='space-y-4'>
+											<div className='p-4 rounded-lg border border-gray-600/50 bg-gray-900/20'>
+												<div className='flex items-center gap-2 mb-3'>
+													<span className='text-gray-400 text-lg'>🐛</span>
+													<div className='text-gray-300 font-semibold'>Debug Info</div>
+												</div>
+												<div className='bg-gray-950/50 border border-gray-700/30 rounded-lg p-3'>
+													<div className='text-gray-300 font-medium text-sm mb-2'>Raw Response Data:</div>
+													<pre className='font-mono text-gray-200 text-xs whitespace-pre-wrap overflow-x-auto max-h-60 overflow-y-auto'>
+														{JSON.stringify(data, null, 2)}
+													</pre>
+												</div>
+											</div>
+										</div>
+									);
+								}
+
 								if (data?.code_answer && data?.expected_code_answer && data?.compare_result) {
 									const outputs = data.code_answer.slice(0, -1) || [];
 									const expected = data.expected_code_answer;
