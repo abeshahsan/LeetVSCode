@@ -1,34 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import TestRunnerPane from "./test-runner-pane";
-
-// Parse problem metadata to get parameter information
-function parseMetaData(problem) {
-	try {
-		const metaStr = problem?.question?.metaData || problem?.metaData;
-		if (!metaStr) return { params: [] };
-
-		const meta = typeof metaStr === "string" ? JSON.parse(metaStr) : metaStr;
-		return {
-			params: meta?.params || [],
-			functionName: meta?.name || "solution",
-		};
-	} catch {
-		return { params: [] };
-	}
-}
-
-// Parse failed test case input into individual parameters
-function parseFailedTestInput(inputStr, paramCount) {
-	if (!inputStr || paramCount <= 0) return [];
-
-	const lines = inputStr
-		.split(/\r?\n/)
-		.map((s) => s.trim())
-		.filter((s) => s.length > 0);
-
-	// Return the first paramCount lines as separate parameters
-	return lines.slice(0, paramCount);
-}
+import { parseMetaData, parseFailedTestInput, getStatusClass, getLikePercentage } from "../utils/ui.js";
 
 function ProblemPane({ problem }) {
 	const [activeTab, setActiveTab] = useState("description");
@@ -40,41 +12,14 @@ function ProblemPane({ problem }) {
 
 	const html = problem?.content || "<p class='text-gray-400'>No description available.</p>";
 
-	const getDifficultyColor = (difficulty) => {
-		switch (difficulty?.toLowerCase()) {
-			case "easy":
-				return "text-green-500 bg-green-500/10 border-green-500/20";
-			case "medium":
-				return "text-yellow-500 bg-yellow-500/10 border-yellow-500/20";
-			case "hard":
-				return "text-red-500 bg-red-500/10 border-red-500/20";
-			default:
-				return "text-gray-400 bg-gray-500/10 border-gray-500/20";
-		}
-	};
-
 	// Determine the user's status for this problem: Solved, Attempted, or Unattempted
 	const computeStatus = () => {
 		return problem?.status === "ac" ? "Solved" : problem?.status === "notac" ? "Attempted" : "";
 	};
 
-	const getStatusClass = (status) => {
-		switch (status) {
-			case "Solved":
-				return "text-green-500 bg-green-500/10 border-green-500/20";
-			case "Attempted":
-				return "text-yellow-500 bg-yellow-500/10 border-yellow-500/20";
-			default:
-				return "text-gray-400 bg-gray-500/10 border-gray-500/20";
-		}
-	};
-
-	const getLikePercentage = () => {
-		const likes = problem?.likes || 0;
-		const dislikes = problem?.dislikes || 0;
-		const total = likes + dislikes;
-		return total > 0 ? Math.round((likes / total) * 100) : 0;
-	};
+	const likes = problem?.likes || 0;
+	const dislikes = problem?.dislikes || 0;
+	const likePct = getLikePercentage(likes, dislikes);
 
 	const openSubmissionTab = () => {
 		const submissionTab = { id: "submission", label: "Submission", closable: true };
@@ -129,7 +74,7 @@ function ProblemPane({ problem }) {
 						code_output: data.code_output,
 						std_output_list: data.std_output_list,
 						submission_id: data.submission_id,
-						
+
 						// Add error details
 						compile_error: data.compile_error,
 						full_compile_error: data.full_compile_error,
@@ -241,7 +186,7 @@ function ProblemPane({ problem }) {
 								{(problem?.likes || problem?.dislikes) && (
 									<div className='flex items-center gap-1'>
 										<span className='text-blue-400'>👍</span>
-										<span>{getLikePercentage()}%</span>
+										<span>{likePct}%</span>
 										<span className='text-gray-500'>({problem?.likes || 0})</span>
 									</div>
 								)}
@@ -421,7 +366,9 @@ function ProblemPane({ problem }) {
 									)}
 
 									{/* Show compilation errors */}
-									{(submissionResult.compile_error || submissionResult.full_compile_error || submissionResult.status === "Compile Error") && (
+									{(submissionResult.compile_error ||
+										submissionResult.full_compile_error ||
+										submissionResult.status === "Compile Error") && (
 										<div className='mt-8'>
 											<div className='flex items-center mb-4'>
 												<span className='text-2xl mr-3'>🔧</span>
@@ -440,9 +387,13 @@ function ProblemPane({ problem }) {
 													</div>
 												</div>
 												<div className='bg-orange-950/50 border border-orange-700/30 rounded-lg p-4'>
-													<div className='text-orange-300 font-medium text-sm mb-2'>Error Details:</div>
+													<div className='text-orange-300 font-medium text-sm mb-2'>
+														Error Details:
+													</div>
 													<pre className='font-mono text-orange-200 text-xs whitespace-pre-wrap overflow-x-auto'>
-														{submissionResult.full_compile_error || submissionResult.compile_error || "No error details available"}
+														{submissionResult.full_compile_error ||
+															submissionResult.compile_error ||
+															"No error details available"}
 													</pre>
 												</div>
 											</div>
@@ -450,7 +401,9 @@ function ProblemPane({ problem }) {
 									)}
 
 									{/* Show runtime errors */}
-									{(submissionResult.runtime_error || submissionResult.full_runtime_error || submissionResult.status === "Runtime Error") && (
+									{(submissionResult.runtime_error ||
+										submissionResult.full_runtime_error ||
+										submissionResult.status === "Runtime Error") && (
 										<div className='mt-8'>
 											<div className='flex items-center mb-4'>
 												<span className='text-2xl mr-3'>⚠️</span>
@@ -469,9 +422,13 @@ function ProblemPane({ problem }) {
 													</div>
 												</div>
 												<div className='bg-purple-950/50 border border-purple-700/30 rounded-lg p-4'>
-													<div className='text-purple-300 font-medium text-sm mb-2'>Error Details:</div>
+													<div className='text-purple-300 font-medium text-sm mb-2'>
+														Error Details:
+													</div>
 													<pre className='font-mono text-purple-200 text-xs whitespace-pre-wrap overflow-x-auto'>
-														{submissionResult.full_runtime_error || submissionResult.runtime_error || "No error details available"}
+														{submissionResult.full_runtime_error ||
+															submissionResult.runtime_error ||
+															"No error details available"}
 													</pre>
 												</div>
 											</div>
@@ -479,20 +436,23 @@ function ProblemPane({ problem }) {
 									)}
 
 									{/* Debug: Show raw submission data when errors occur */}
-									{(submissionResult.status !== "Accepted" && submissionResult.run_success === false) && (
-										<div className='mt-8'>
-											<div className='flex items-center mb-4'>
-												<span className='text-2xl mr-3'>🐛</span>
-												<h3 className='text-xl font-bold text-white'>Debug Info</h3>
+									{submissionResult.status !== "Accepted" &&
+										submissionResult.run_success === false && (
+											<div className='mt-8'>
+												<div className='flex items-center mb-4'>
+													<span className='text-2xl mr-3'>🐛</span>
+													<h3 className='text-xl font-bold text-white'>Debug Info</h3>
+												</div>
+												<div className='bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl p-6 border border-gray-600/50 shadow-lg backdrop-blur-sm'>
+													<div className='text-gray-300 font-medium text-sm mb-2'>
+														Raw Response Data:
+													</div>
+													<pre className='font-mono text-gray-200 text-xs whitespace-pre-wrap overflow-x-auto bg-gray-950/50 border border-gray-700/30 rounded p-3 max-h-60 overflow-y-auto'>
+														{JSON.stringify(submissionResult, null, 2)}
+													</pre>
+												</div>
 											</div>
-											<div className='bg-gradient-to-br from-gray-900/50 to-gray-800/50 rounded-xl p-6 border border-gray-600/50 shadow-lg backdrop-blur-sm'>
-												<div className='text-gray-300 font-medium text-sm mb-2'>Raw Response Data:</div>
-												<pre className='font-mono text-gray-200 text-xs whitespace-pre-wrap overflow-x-auto bg-gray-950/50 border border-gray-700/30 rounded p-3 max-h-60 overflow-y-auto'>
-													{JSON.stringify(submissionResult, null, 2)}
-												</pre>
-											</div>
-										</div>
-									)}
+										)}
 
 									{submissionResult.total_testcases && (
 										<div className='mt-8'>

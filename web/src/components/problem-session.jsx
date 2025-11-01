@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getDifficultyStyles } from "../utils/ui.js";
 import ProblemPane from "./problem-pane";
 
 export default function ProblemSession({ data, onBack }) {
@@ -61,18 +62,14 @@ export default function ProblemSession({ data, onBack }) {
 					)}
 					<div className='flex items-center gap-3'>
 						<h2 className='text-xl font-semibold text-white'>
-							{problem?.frontendId ? `${problem.frontendId}. ` : ""}
+							{problem?.questionFrontendId ? `${problem.questionFrontendId}. ` : ""}
 							{problem?.title || "Problem"}
 						</h2>
 						{problem?.difficulty && (
 							<span
-								className={`px-2 py-1 text-xs font-medium rounded-full border ${
-									problem.difficulty?.toLowerCase() === "easy"
-										? "text-green-500 bg-green-500/10 border-green-500/20"
-										: problem.difficulty?.toLowerCase() === "medium"
-										? "text-yellow-500 bg-yellow-500/10 border-yellow-500/20"
-										: "text-red-500 bg-red-500/10 border-red-500/20"
-								}`}
+								className={`px-2 py-1 text-xs font-medium rounded-full border ${getDifficultyStyles(
+									problem.difficulty
+								)}`}
 							>
 								{problem.difficulty}
 							</span>
