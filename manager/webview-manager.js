@@ -3,10 +3,11 @@ import * as vscode from "vscode";
 import fetch from "node-fetch";
 import { runLoginProcess } from "./login-manager.js";
 import { ProblemDetailsQuery, ProblemListQuery, langToExtentionMap } from "./leetcode-utils.js";
+import ProblemDetails from "../models/problem-details.js";
 import * as fs from "fs";
 
 import { leetcodeOutputChannel } from "../output-logger.js";
-import Problem from "../data/problem.js";
+import Problem from "../models/problem.js";
 
 let panel;
 
@@ -89,8 +90,9 @@ export function createOrShowWebview(context) {
 					const { titleSlug } = message.problem;
 					const cookies = context.globalState.get("leetcode_cookies");
 					const res = await new ProblemDetailsQuery({ cookies }).run(titleSlug);
+					const details = ProblemDetails.fromGraphQL(res).toJSON();
 					panel?.reveal(vscode.ViewColumn.One);
-					panel?.webview.postMessage({ command: "problemDetails", data: res });
+					panel?.webview.postMessage({ command: "problemDetails", data: details });
 					break;
 				}
 
@@ -156,8 +158,9 @@ export function createOrShowWebview(context) {
 
 						let questionId = null;
 						try {
-							const details = await new ProblemDetailsQuery({ cookies }).run(slug);
-							questionId = details?.question?.questionId || details?.questionId || null;
+							const raw = await new ProblemDetailsQuery({ cookies }).run(slug);
+							const details = ProblemDetails.fromGraphQL(raw);
+							questionId = details?.questionId || null;
 						} catch (e) {
 							leetcodeOutputChannel.appendLine(
 								`[run-remote] Failed to get question details: ${e.message}`
@@ -283,10 +286,11 @@ export function createOrShowWebview(context) {
 						leetcodeOutputChannel.appendLine(`[getProblemDetails] Fetching details for ${slug}`);
 						const cookies = context.globalState.get("leetcode_cookies");
 						const res = await new ProblemDetailsQuery({ cookies }).run(slug);
+						const details = ProblemDetails.fromGraphQL(res).toJSON();
 						leetcodeOutputChannel.appendLine(
 							`[getProblemDetails] Successfully fetched details for ${slug}`
 						);
-						panel?.webview.postMessage({ command: "problemDetails", data: res });
+						panel?.webview.postMessage({ command: "problemDetails", data: details });
 					} catch (err) {
 						leetcodeOutputChannel.appendLine(`[getProblemDetails] Error: ${err.message}`);
 						panel?.webview.postMessage({ command: "problemDetailsError", error: String(err) });
@@ -306,8 +310,9 @@ export function createOrShowWebview(context) {
 						const csrftoken = cookies.find((c) => c.name === "csrftoken")?.value || "";
 
 						// Get problem details to get questionId
-						const problemDetails = await new ProblemDetailsQuery({ cookies }).run(slug);
-						const questionId = problemDetails?.question?.questionId;
+						const rawDetails = await new ProblemDetailsQuery({ cookies }).run(slug);
+						const details = ProblemDetails.fromGraphQL(rawDetails);
+						const questionId = details?.questionId;
 
 						if (!questionId) {
 							throw new Error("Could not get question ID");
@@ -450,8 +455,9 @@ export async function openProblemFromExtension(context, titleSlug) {
 		createOrShowWebview(context);
 		const cookies = context.globalState.get("leetcode_cookies");
 		const res = await new ProblemDetailsQuery({ cookies }).run(titleSlug);
+		const details = ProblemDetails.fromGraphQL(res).toJSON();
 		panel?.reveal(vscode.ViewColumn.One);
-		panel?.webview.postMessage({ command: "problemDetails", data: res });
+		panel?.webview.postMessage({ command: "problemDetails", data: details });
 	} catch (err) {
 		console.error("Failed to open problem from extension:", err);
 		vscode.window.showErrorMessage(`Failed to open problem: ${err.message}`);

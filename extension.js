@@ -73,7 +73,7 @@ class LeetViewProvider {
 				return [signIn];
 			}
 
-			const filtersRoot = new vscode.TreeItem("Filters", vscode.TreeItemCollapsibleState.Expanded);
+			const filtersRoot = new vscode.TreeItem("Filters", vscode.TreeItemCollapsibleState.Collapsed);
 			filtersRoot.iconPath = new vscode.ThemeIcon("filter");
 			// mark filters root so view/title menu items can target it
 			filtersRoot.contextValue = "filtersRoot";
@@ -174,7 +174,7 @@ class LeetViewProvider {
 			const limited = filtered;
 
 			const items = limited.map((q) => {
-				const label = `${q.frontendQuestionId}. ${q.title}`;
+				const label = `${q.frontendId}. ${q.title}`;
 				const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
 
 				const tags = q.topicTags

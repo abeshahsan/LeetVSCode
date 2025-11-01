@@ -1,4 +1,4 @@
-// OOP refactor: shared base class for GraphQL queries
+
 export class BaseLeetQuery {
 	constructor(options = {}) {
 		this.endpoint = "https://leetcode.com/graphql";
@@ -62,7 +62,7 @@ export class ProblemListQuery extends BaseLeetQuery {
 
 	async run(params = {}) {
 		const body = this.buildBody(params);
-		// List endpoint prefers lowercase referer
+
 		const { data } = await this.post(body, { referer: "https://leetcode.com" });
 		return data;
 	}
