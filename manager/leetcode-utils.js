@@ -1,127 +1,127 @@
-export async function getAllProblems(options) {
-	const body = {
-		operationName: "problemsetQuestionList",
-		variables: {
-			categorySlug: "",
-			limit: 4000,
-			skip: 0,
-			filters: {},
-		},
-		query: `
-            query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
-                problemsetQuestionList: questionList(
-                    categorySlug: $categorySlug
-                    limit: $limit
-                    skip: $skip
-                    filters: $filters
-                ) {
-                    total: totalNum
-                    questions: data {
-                    acRate
-                    difficulty
-                    freqBar
-                    frontendQuestionId: questionFrontendId
-                    isFavor
-                    paidOnly: isPaidOnly
-                    status
-                    title
-                    titleSlug
-                    topicTags {
-                        name
-                        id
-                        slug
-                    }
-                    hasSolution
-                    hasVideoSolution
-                    }
-                }
-            }
-				`,
-	};
+// OOP refactor: shared base class for GraphQL queries
+export class BaseLeetQuery {
+	constructor(options = {}) {
+		this.endpoint = "https://leetcode.com/graphql";
+		this.cookies = options.cookies || [];
+		this.cookieStr = this.cookies.map((c) => `${c.name}=${c.value}`).join("; ");
+		this.csrftoken = this.cookies.find((c) => c.name === "csrftoken")?.value || "";
+	}
 
-	let cookies = options?.cookies || [];
-	const cookieStr = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-	const csrftoken = cookies.find((c) => c.name === "csrftoken")?.value;
+	baseHeaders() {
+		return {
+			"Content-Type": "application/json",
+			Cookie: this.cookieStr,
+			"x-csrftoken": this.csrftoken,
+		};
+	}
 
-	try {
-		const res = await fetch("https://leetcode.com/graphql", {
+	async post(body, extraHeaders = {}) {
+		const res = await fetch(this.endpoint, {
 			method: "POST",
-			headers: {
-				"content-type": "application/json",
-				referer: "https://leetcode.com",
-				Cookie: cookieStr,
-				"x-csrftoken": csrftoken || "",
-			},
+			headers: { ...this.baseHeaders(), ...extraHeaders },
 			body: JSON.stringify(body),
 		});
-		const { data } = await res.json();
+		const json = await res.json().catch(() => ({}));
+		if (!res.ok) {
+			const msg = json?.errors ? JSON.stringify(json.errors) : `${res.status} ${res.statusText}`;
+			throw new Error(`LeetCode GraphQL error: ${msg}`);
+		}
+		return json;
+	}
+}
 
-		if (!res.ok) throw new Error(`Error fetching problems: ${res.status} ${res.statusText}`);
-		return Promise.resolve(data);
+export class ProblemListQuery extends BaseLeetQuery {
+	buildBody({ categorySlug = "", limit = 4000, skip = 0, filters = {} } = {}) {
+		return {
+			operationName: "problemsetQuestionList",
+			variables: { categorySlug, limit, skip, filters },
+			query: `
+				query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+					problemsetQuestionList: questionList(
+						categorySlug: $categorySlug
+						limit: $limit
+						skip: $skip
+						filters: $filters
+					) {
+						total: totalNum
+						questions: data {
+							acRate
+							difficulty
+							frontendId: questionFrontendId
+							isPaidOnly
+							status
+							title
+							titleSlug
+							topicTags { name id slug }
+						}
+					}
+				}
+			`,
+		};
+	}
+
+	async run(params = {}) {
+		const body = this.buildBody(params);
+		// List endpoint prefers lowercase referer
+		const { data } = await this.post(body, { referer: "https://leetcode.com" });
+		return data;
+	}
+}
+
+export class ProblemDetailsQuery extends BaseLeetQuery {
+	buildBody(slug) {
+		return {
+			operationName: "questionData",
+			variables: { titleSlug: slug },
+			query: `
+				query questionData($titleSlug: String!) {
+					question(titleSlug: $titleSlug) {
+						questionId
+						questionFrontendId
+						titleSlug
+						metaData
+						title
+						content
+						difficulty
+						exampleTestcases
+						acRate
+						likes
+						status
+						dislikes
+						topicTags { name id slug }
+						codeSnippets { lang langSlug code }
+					}
+				}
+			`,
+		};
+	}
+
+	async run(slug) {
+		const body = this.buildBody(slug);
+		// Details endpoint used capitalized Referer previously
+		const { data, errors } = await this.post(body, { Referer: "https://leetcode.com/problems/" });
+		if (errors) throw new Error(JSON.stringify(errors, null, 2));
+		return data;
+	}
+}
+
+// Backward-compatible function exports using the OOP classes above
+export async function getAllProblems(options) {
+	try {
+		const client = new ProblemListQuery(options);
+		const data = await client.run(options?.params);
+		return data;
 	} catch (err) {
 		return Promise.reject(err);
 	}
 }
 
 export async function getProblemDetails(slug, options) {
-	let cookies = options?.cookies || [];
-	const cookieStr = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-	const csrftoken = cookies.find((c) => c.name === "csrftoken")?.value;
-
-	const body = {
-		operationName: "questionData",
-		variables: { titleSlug: slug },
-		query: `
-      query questionData($titleSlug: String!) {
-        question(titleSlug: $titleSlug) {
-          questionId
-          questionFrontendId
-			titleSlug
-			metaData
-			title
-			content
-			difficulty
-			exampleTestcases
-			acRate
-			likes
-			status
-			dislikes
-		  	topicTags {
-				name
-				id
-				slug
-			}
-			codeSnippets {
-			lang
-			langSlug
-			code
-			}
-        }
-      }
-    `,
-	};
-
 	try {
-		const res = await fetch("https://leetcode.com/graphql", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Referer: "https://leetcode.com/problems/",
-				Cookie: cookieStr,
-				"x-csrftoken": csrftoken || "",
-			},
-			body: JSON.stringify(body),
-		});
-
-		if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
-
-		const { data, errors } = await res.json();
-		console.log(JSON.stringify(data, null, 2));
-
-		if (errors) throw new Error(JSON.stringify(errors, null, 2));
+		const client = new ProblemDetailsQuery(options);
+		const data = await client.run(slug);
 		return data;
 	} catch (err) {
-		console.error("Fetch failed:", err);
 		throw err;
 	}
 }

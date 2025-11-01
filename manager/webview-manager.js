@@ -2,11 +2,11 @@ import path from "path";
 import * as vscode from "vscode";
 import fetch from "node-fetch";
 import { runLoginProcess } from "./login-manager.js";
-import { getProblemDetails, getAllProblems } from "./leetcode-utils.js";
+import { ProblemDetailsQuery, ProblemListQuery, langToExtentionMap } from "./leetcode-utils.js";
 import * as fs from "fs";
 
 import { leetcodeOutputChannel } from "../output-logger.js";
-import { langToExtentionMap } from "./leetcode-utils.js";
+import Problem from "../data/problem.js";
 
 let panel;
 
@@ -88,7 +88,7 @@ export function createOrShowWebview(context) {
 				case "open-problem": {
 					const { titleSlug } = message.problem;
 					const cookies = context.globalState.get("leetcode_cookies");
-					const res = await getProblemDetails(titleSlug, { cookies });
+					const res = await new ProblemDetailsQuery({ cookies }).run(titleSlug);
 					panel?.reveal(vscode.ViewColumn.One);
 					panel?.webview.postMessage({ command: "problemDetails", data: res });
 					break;
@@ -118,7 +118,7 @@ export function createOrShowWebview(context) {
 							if (editor.document.uri.toString() !== openedEditor.document.uri.toString()) {
 								try {
 									await vscode.window.showTextDocument(editor.document, { preview: false });
-									await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+									await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
 								} catch (e) {
 									// ignore errors closing individual editors
 								}
@@ -156,7 +156,7 @@ export function createOrShowWebview(context) {
 
 						let questionId = null;
 						try {
-							const details = await getProblemDetails(slug, { cookies });
+							const details = await new ProblemDetailsQuery({ cookies }).run(slug);
 							questionId = details?.question?.questionId || details?.questionId || null;
 						} catch (e) {
 							leetcodeOutputChannel.appendLine(
@@ -261,8 +261,13 @@ export function createOrShowWebview(context) {
 					try {
 						leetcodeOutputChannel.appendLine(`[getAllProblems] Fetching all problems`);
 						let cookies = context.globalState.get("leetcode_cookies");
-						const data = await getAllProblems({ cookies });
+						const data = await new ProblemListQuery({ cookies }).run();
 						const problems = data?.problemsetQuestionList?.questions || [];
+
+						problems.forEach((element) => {
+							new Problem(element).addToAll();
+						});
+
 						leetcodeOutputChannel.appendLine(`[getAllProblems] Found ${problems.length} problems`);
 						panel?.webview.postMessage({ command: "allProblems", data: problems });
 					} catch (err) {
@@ -277,7 +282,7 @@ export function createOrShowWebview(context) {
 					try {
 						leetcodeOutputChannel.appendLine(`[getProblemDetails] Fetching details for ${slug}`);
 						const cookies = context.globalState.get("leetcode_cookies");
-						const res = await getProblemDetails(slug, { cookies });
+						const res = await new ProblemDetailsQuery({ cookies }).run(slug);
 						leetcodeOutputChannel.appendLine(
 							`[getProblemDetails] Successfully fetched details for ${slug}`
 						);
@@ -301,7 +306,7 @@ export function createOrShowWebview(context) {
 						const csrftoken = cookies.find((c) => c.name === "csrftoken")?.value || "";
 
 						// Get problem details to get questionId
-						const problemDetails = await getProblemDetails(slug, { cookies });
+						const problemDetails = await new ProblemDetailsQuery({ cookies }).run(slug);
 						const questionId = problemDetails?.question?.questionId;
 
 						if (!questionId) {
@@ -444,7 +449,7 @@ export async function openProblemFromExtension(context, titleSlug) {
 	try {
 		createOrShowWebview(context);
 		const cookies = context.globalState.get("leetcode_cookies");
-		const res = await getProblemDetails(titleSlug, { cookies });
+		const res = await new ProblemDetailsQuery({ cookies }).run(titleSlug);
 		panel?.reveal(vscode.ViewColumn.One);
 		panel?.webview.postMessage({ command: "problemDetails", data: res });
 	} catch (err) {

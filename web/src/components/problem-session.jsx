@@ -61,7 +61,7 @@ export default function ProblemSession({ data, onBack }) {
 					)}
 					<div className='flex items-center gap-3'>
 						<h2 className='text-xl font-semibold text-white'>
-							{problem?.questionFrontendId ? `${problem.questionFrontendId}. ` : ""}
+							{problem?.frontendId ? `${problem.frontendId}. ` : ""}
 							{problem?.title || "Problem"}
 						</h2>
 						{problem?.difficulty && (

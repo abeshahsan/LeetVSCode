@@ -1,11 +1,7 @@
 import { createOrShowWebview, notifySession, openProblemFromExtension } from "./manager/webview-manager.js";
 import * as vscode from "vscode";
-import { getAllProblems } from "./manager/leetcode-utils.js";
+import { ProblemListQuery } from "./manager/leetcode-utils.js";
 
-/**
- * LeetViewProvider
- * Handles the LeetCode sidebar tree view in VS Code.
- */
 class LeetViewProvider {
 	constructor(context) {
 		this.context = context;
@@ -14,9 +10,9 @@ class LeetViewProvider {
 
 		this._problems = [];
 		this._loading = false;
-		this._filters = []; // Array of "Easy" | "Medium" | "Hard"
+		this._filters = [];
 		this._searchTerm = null;
-		this._tagFilters = []; // Array of tag names
+		this._tagFilters = [];
 	}
 
 	refresh() {
@@ -150,7 +146,8 @@ class LeetViewProvider {
 				const cookies = this.context.globalState.get("leetcode_cookies");
 				this._loading = true;
 				try {
-					const data = await getAllProblems({ cookies });
+					const client = new ProblemListQuery({ cookies });
+					const data = await client.run();
 					this._problems = data?.problemsetQuestionList?.questions || [];
 				} catch (e) {
 					vscode.window.showErrorMessage(`Failed to load problems: ${e.message || e}`);
@@ -200,7 +197,9 @@ class LeetViewProvider {
 				);
 
 				// Compute a safe, short status label for the tree description
-				item.description = `   ${q?.status === "ac" ? "✅ Solved" : q?.status === "notac" ? "⚠️ Attempted" : ""}`;
+				item.description = `   ${
+					q?.status === "ac" ? "✅ Solved" : q?.status === "notac" ? "⚠️ Attempted" : ""
+				}`;
 				item.command = {
 					command: "leet.openProblem",
 					title: "Open Problem",

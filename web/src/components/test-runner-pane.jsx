@@ -130,7 +130,7 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 						>
 							{remoteRunning ? (
 								<>
-									<div className="animate-spin h-3 w-3 border border-white border-t-transparent rounded-full"></div>
+									<div className='animate-spin h-3 w-3 border border-white border-t-transparent rounded-full'></div>
 									Running...
 								</>
 							) : (
@@ -147,7 +147,7 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 						>
 							{isSubmitting ? (
 								<>
-									<span className="animate-spin">⏳</span>
+									<span className='animate-spin'>⏳</span>
 									Submitting...
 								</>
 							) : (
@@ -187,7 +187,7 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 						Test Cases {metaData.params.length > 0 && `(${metaData.params.length} parameters)`}
 					</div>
 					<div className='text-xs text-gray-500'>
-						{testcases.length} case{testcases.length !== 1 ? 's' : ''}
+						{testcases.length} case{testcases.length !== 1 ? "s" : ""}
 					</div>
 				</div>
 
@@ -198,7 +198,6 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 						<div className='text-xs text-gray-600 mt-1'>Click "Add Case" to get started</div>
 					</div>
 				) : (
-
 					<div className='space-y-3'>
 						{testcases.map((testCase, caseIdx) => (
 							<div
@@ -207,9 +206,7 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 							>
 								<div className='flex items-center justify-between p-3 border-b border-gray-700 bg-gray-800/30'>
 									<div className='flex items-center gap-2'>
-										<span className='text-sm font-medium text-gray-300'>
-											Case {caseIdx + 1}
-										</span>
+										<span className='text-sm font-medium text-gray-300'>Case {caseIdx + 1}</span>
 										{caseIdx < examples.length && (
 											<span className='text-xs px-2 py-0.5 bg-blue-600/20 text-blue-300 rounded border border-blue-600/30'>
 												Example
@@ -230,13 +227,17 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 											{metaData.params[paramIdx] && (
 												<label className='block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wide'>
 													{metaData.params[paramIdx].name}
-													<span className='text-gray-500 ml-1'>({metaData.params[paramIdx].type})</span>
+													<span className='text-gray-500 ml-1'>
+														({metaData.params[paramIdx].type})
+													</span>
 												</label>
 											)}
 											<textarea
 												value={param}
 												onChange={(e) => updateTestcaseParam(caseIdx, paramIdx, e.target.value)}
-												placeholder={`Enter ${metaData.params[paramIdx]?.name || `parameter ${paramIdx + 1}`}...`}
+												placeholder={`Enter ${
+													metaData.params[paramIdx]?.name || `parameter ${paramIdx + 1}`
+												}...`}
 												spellCheck={false}
 												className='w-full h-16 p-3 font-mono text-sm bg-[#0a0a0a] border border-gray-700 rounded-lg text-gray-200 resize-none focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition-colors'
 											/>
@@ -253,15 +254,17 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 			{remoteResults && (
 				<div className='border-t border-gray-800 bg-[#1a1a1a]'>
 					<div className='p-4'>
-						<div className='text-lg font-semibold text-white mb-3 flex items-center gap-2'>
-							📊 Results
-						</div>
+						<div className='text-lg font-semibold text-white mb-3 flex items-center gap-2'>📊 Results</div>
 						{remoteResults.type === "response" &&
 							(() => {
 								const data = remoteResults.data;
-								
+
 								// Handle compilation errors
-								if (data?.compile_error || data?.full_compile_error || data?.status_msg === "Compile Error") {
+								if (
+									data?.compile_error ||
+									data?.full_compile_error ||
+									data?.status_msg === "Compile Error"
+								) {
 									return (
 										<div className='p-4 rounded-lg border border-orange-600/50 bg-orange-900/20'>
 											<div className='flex items-center gap-2 mb-3'>
@@ -269,17 +272,25 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 												<div className='text-orange-300 font-semibold'>Compilation Error</div>
 											</div>
 											<div className='bg-orange-950/50 border border-orange-700/30 rounded-lg p-3'>
-												<div className='text-orange-300 font-medium text-sm mb-2'>Error Details:</div>
+												<div className='text-orange-300 font-medium text-sm mb-2'>
+													Error Details:
+												</div>
 												<div className='font-mono text-orange-200 text-xs whitespace-pre-wrap'>
-													{data.full_compile_error || data.compile_error || "No error details available"}
+													{data.full_compile_error ||
+														data.compile_error ||
+														"No error details available"}
 												</div>
 											</div>
 										</div>
 									);
 								}
-								
-								// Handle runtime errors  
-								if (data?.runtime_error || data?.full_runtime_error || data?.status_msg === "Runtime Error") {
+
+								// Handle runtime errors
+								if (
+									data?.runtime_error ||
+									data?.full_runtime_error ||
+									data?.status_msg === "Runtime Error"
+								) {
 									return (
 										<div className='p-4 rounded-lg border border-purple-600/50 bg-purple-900/20'>
 											<div className='flex items-center gap-2 mb-3'>
@@ -287,17 +298,26 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 												<div className='text-purple-300 font-semibold'>Runtime Error</div>
 											</div>
 											<div className='bg-purple-950/50 border border-purple-700/30 rounded-lg p-3'>
-												<div className='text-purple-300 font-medium text-sm mb-2'>Error Details:</div>
+												<div className='text-purple-300 font-medium text-sm mb-2'>
+													Error Details:
+												</div>
 												<div className='font-mono text-purple-200 text-xs whitespace-pre-wrap'>
-													{data.full_runtime_error || data.runtime_error || "No error details available"}
+													{data.full_runtime_error ||
+														data.runtime_error ||
+														"No error details available"}
 												</div>
 											</div>
 										</div>
 									);
 								}
-								
+
 								// Handle other errors based on run_success flag
-								if (data?.run_success === false && data?.status_msg && data?.status_msg !== "Compile Error" && data?.status_msg !== "Runtime Error") {
+								if (
+									data?.run_success === false &&
+									data?.status_msg &&
+									data?.status_msg !== "Compile Error" &&
+									data?.status_msg !== "Runtime Error"
+								) {
 									return (
 										<div className='p-4 rounded-lg border border-red-600/50 bg-red-900/20'>
 											<div className='flex items-center gap-2 mb-3'>
@@ -306,7 +326,9 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 											</div>
 											{data.error_message && (
 												<div className='bg-red-950/50 border border-red-700/30 rounded-lg p-3'>
-													<div className='text-red-300 font-medium text-sm mb-2'>Error Details:</div>
+													<div className='text-red-300 font-medium text-sm mb-2'>
+														Error Details:
+													</div>
 													<div className='font-mono text-red-200 text-xs whitespace-pre-wrap'>
 														{data.error_message}
 													</div>
@@ -317,7 +339,11 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 								}
 
 								// Add debug info for failed runs
-								if (data?.run_success === false || data?.status_msg === "Compile Error" || data?.status_msg === "Runtime Error") {
+								if (
+									data?.run_success === false ||
+									data?.status_msg === "Compile Error" ||
+									data?.status_msg === "Runtime Error"
+								) {
 									return (
 										<div className='space-y-4'>
 											<div className='p-4 rounded-lg border border-gray-600/50 bg-gray-900/20'>
@@ -326,7 +352,9 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 													<div className='text-gray-300 font-semibold'>Debug Info</div>
 												</div>
 												<div className='bg-gray-950/50 border border-gray-700/30 rounded-lg p-3'>
-													<div className='text-gray-300 font-medium text-sm mb-2'>Raw Response Data:</div>
+													<div className='text-gray-300 font-medium text-sm mb-2'>
+														Raw Response Data:
+													</div>
 													<pre className='font-mono text-gray-200 text-xs whitespace-pre-wrap overflow-x-auto max-h-60 overflow-y-auto'>
 														{JSON.stringify(data, null, 2)}
 													</pre>
@@ -347,23 +375,37 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 									return (
 										<div className='space-y-4'>
 											{/* Summary Card */}
-											<div className={`p-4 rounded-lg border ${
-												allPassed 
-													? 'bg-green-900/20 border-green-700/50' 
-													: 'bg-red-900/20 border-red-700/50'
-											}`}>
+											<div
+												className={`p-4 rounded-lg border ${
+													allPassed
+														? "bg-green-900/20 border-green-700/50"
+														: "bg-red-900/20 border-red-700/50"
+												}`}
+											>
 												<div className='flex items-center justify-between mb-3'>
 													<div className='flex items-center gap-2'>
-														<span className={`text-lg ${allPassed ? 'text-green-400' : 'text-red-400'}`}>
-															{allPassed ? '✅' : '❌'}
+														<span
+															className={`text-lg ${
+																allPassed ? "text-green-400" : "text-red-400"
+															}`}
+														>
+															{allPassed ? "✅" : "❌"}
 														</span>
-														<span className={`font-semibold ${allPassed ? 'text-green-300' : 'text-red-300'}`}>
-															{allPassed ? 'All Tests Passed!' : 'Some Tests Failed'}
+														<span
+															className={`font-semibold ${
+																allPassed ? "text-green-300" : "text-red-300"
+															}`}
+														>
+															{allPassed ? "All Tests Passed!" : "Some Tests Failed"}
 														</span>
 													</div>
-													<span className={`text-sm font-mono px-2 py-1 rounded ${
-														allPassed ? 'bg-green-800/50 text-green-200' : 'bg-red-800/50 text-red-200'
-													}`}>
+													<span
+														className={`text-sm font-mono px-2 py-1 rounded ${
+															allPassed
+																? "bg-green-800/50 text-green-200"
+																: "bg-red-800/50 text-red-200"
+														}`}
+													>
 														{totalCorrect}/{totalCases} passed
 													</span>
 												</div>
@@ -401,7 +443,11 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 														>
 															<div className='flex items-center justify-between p-3 border-b border-gray-700'>
 																<div className='flex items-center gap-2'>
-																	<span className={`text-lg ${passed ? 'text-green-400' : 'text-red-400'}`}>
+																	<span
+																		className={`text-lg ${
+																			passed ? "text-green-400" : "text-red-400"
+																		}`}
+																	>
 																		{passed ? "✅" : "❌"}
 																	</span>
 																	<span className='font-medium text-gray-300'>
@@ -423,12 +469,20 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 																{/* Input parameters */}
 																{testcases[i] && (
 																	<div>
-																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-2'>Input</div>
+																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-2'>
+																			Input
+																		</div>
 																		<div className='space-y-1'>
 																			{testcases[i].map((param, paramIdx) => (
-																				<div key={paramIdx} className='flex items-start gap-2'>
+																				<div
+																					key={paramIdx}
+																					className='flex items-start gap-2'
+																				>
 																					<span className='text-blue-300 font-medium min-w-0'>
-																						{metaData.params[paramIdx]?.name || `param${paramIdx + 1}`}:
+																						{metaData.params[paramIdx]
+																							?.name ||
+																							`param${paramIdx + 1}`}
+																						:
 																					</span>
 																					<span className='text-gray-300 font-mono text-xs bg-gray-800/50 px-2 py-1 rounded flex-1'>
 																						{param}
@@ -442,18 +496,24 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 																{/* Expected vs Output */}
 																<div className='grid grid-cols-2 gap-3'>
 																	<div>
-																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-1'>Expected</div>
+																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-1'>
+																			Expected
+																		</div>
 																		<div className='font-mono text-xs bg-gray-800/50 p-2 rounded text-gray-300 break-all'>
 																			{exp}
 																		</div>
 																	</div>
 																	<div>
-																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-1'>Output</div>
-																		<div className={`font-mono text-xs p-2 rounded break-all ${
-																			passed 
-																				? 'bg-green-900/20 text-green-300 border border-green-700/30' 
-																				: 'bg-red-900/20 text-red-300 border border-red-700/30'
-																		}`}>
+																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-1'>
+																			Output
+																		</div>
+																		<div
+																			className={`font-mono text-xs p-2 rounded break-all ${
+																				passed
+																					? "bg-green-900/20 text-green-300 border border-green-700/30"
+																					: "bg-red-900/20 text-red-300 border border-red-700/30"
+																			}`}
+																		>
 																			{out}
 																		</div>
 																	</div>
@@ -462,7 +522,9 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 																{/* Standard Output */}
 																{data.std_output_list && data.std_output_list[i] && (
 																	<div className='mt-3'>
-																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-1'>Standard Output</div>
+																		<div className='text-gray-400 text-xs uppercase tracking-wide mb-1'>
+																			Standard Output
+																		</div>
 																		<div className='font-mono text-xs bg-blue-900/10 border border-blue-600/30 p-2 rounded text-blue-300 break-all whitespace-pre-wrap'>
 																			{data.std_output_list[i] || "(empty)"}
 																		</div>
@@ -479,7 +541,9 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
 									// Fallback for unexpected response format
 									return (
 										<div className='p-4 rounded-lg border border-orange-600/50 bg-orange-900/20'>
-											<div className='text-orange-300 font-medium mb-2'>⚠️ Unexpected Response Format</div>
+											<div className='text-orange-300 font-medium mb-2'>
+												⚠️ Unexpected Response Format
+											</div>
 											<pre className='text-xs text-gray-300 whitespace-pre-wrap p-3 rounded bg-gray-800/50 border border-gray-700 overflow-auto max-h-40'>
 												{JSON.stringify(data, null, 2)}
 											</pre>
