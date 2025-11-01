@@ -1,6 +1,6 @@
-import { createOrShowWebview, notifySession, openProblemFromExtension } from "./manager/webview-manager.js";
+import { createOrShowWebview, notifySession, openProblemFromExtension } from "./core/webview-manager.js";
 import * as vscode from "vscode";
-import { ProblemListQuery } from "./manager/leetcode-utils.js";
+import { ProblemListQuery } from "./core/leetcode-utils.js";
 
 class LeetViewProvider {
 	constructor(context) {
@@ -347,7 +347,7 @@ export function activate(context) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand("leet.signIn", async () => {
 			try {
-				const { runLoginProcess } = await import("./manager/login-manager.js");
+				const { runLoginProcess } = await import("./core/login-manager.js");
 				await runLoginProcess(undefined, context);
 			} catch (e) {
 				vscode.window.showErrorMessage(`Login failed: ${e.message}`);
