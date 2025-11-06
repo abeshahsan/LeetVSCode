@@ -22,17 +22,14 @@
 				"title": "LeetCode"
 			},
 			{
-				"command": "webview.openWebview",
-				"title": "Open LeetCode",
-				"icon": {
-					"light": "resources/icon.svg",
-					"dark": "resources/icon.svg"
-				}
-			},
-			{
 				"command": "leet.signIn",
 				"title": "Sign In to LeetCode",
 				"icon": "$(account)"
+			},
+			{
+				"command": "leet.signOut",
+				"title": "Sign Out from LeetCode",
+				"icon": "$(sign-out)"
 			},
 			{
 				"command": "leet.openProblem",
@@ -105,30 +102,30 @@
 		"viewsWelcome": [
 			{
 				"view": "leetView",
-				"contents": "# LeetCode\n[Open LeetCode](command:webview.openWebview) · [Sign In](command:leet.signIn)"
+				"contents": "# LeetCode\n[Sign In](command:leet.signIn)"
 			}
 		],
 		"menus": {
 			"view/title": [
 				{
-					"command": "webview.openWebview",
-					"when": "view == leetView",
+					"command": "leet.signIn",
+					"when": "view == leetView && !leetcode.loggedIn",
 					"group": "navigation@1"
 				},
 				{
-					"command": "leet.signIn",
-					"when": "view == leetView",
-					"group": "navigation@2"
+					"command": "leet.signOut",
+					"when": "view == leetView && leetcode.loggedIn",
+					"group": "navigation@1"
 				},
 				{
 					"command": "leet.refresh",
-					"when": "view == leetView && viewItem == filtersRoot",
-					"group": "navigation@3"
+					"when": "view == leetView && leetcode.loggedIn",
+					"group": "navigation@2"
 				},
 				{
 					"command": "leet.clearFilter",
 					"when": "view == leetView && viewItem == filtersRoot",
-					"group": "navigation@4"
+					"group": "navigation@3"
 				}
 			],
 			"view/item/context": [

@@ -130,6 +130,17 @@ export function notifySession(cookiesExist) {
 	panel?.webview.postMessage({ command: "session", cookiesExist: !!cookiesExist });
 }
 
+export function closeWebview() {
+	if (panel) {
+		try {
+			panel.dispose();
+			panel = undefined;
+		} catch (error) {
+			// Panel might already be disposed
+		}
+	}
+}
+
 export async function openProblemFromExtension(context, titleSlug) {
 	try {
 		createOrShowWebview(context);

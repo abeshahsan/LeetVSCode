@@ -1,4 +1,4 @@
-import { createOrShowWebview, notifySession, openProblemFromExtension } from "./core/webview-manager.js";
+import { createOrShowWebview, notifySession, openProblemFromExtension, closeWebview } from "./core/webview-manager.js";
 import * as vscode from "vscode";
 import { ProblemListQuery } from "./core/leetcode-utils.js";
 
@@ -65,24 +65,29 @@ class LeetViewProvider {
 
 		// === ROOT LEVEL ===
 		if (!element) {
-			if (!loggedIn) {
-				const signIn = new vscode.TreeItem("Sign in to LeetCode", vscode.TreeItemCollapsibleState.None);
-				signIn.command = { command: "leet.signIn", title: "Sign In" };
-				signIn.iconPath = new vscode.ThemeIcon("account");
-				signIn.description = "Click to authenticate";
-				return [signIn];
+			const items = [];
+
+			// Only show filters and problems if logged in
+			if (loggedIn) {
+				const filtersRoot = new vscode.TreeItem("Filters", vscode.TreeItemCollapsibleState.Collapsed);
+				filtersRoot.iconPath = new vscode.ThemeIcon("filter");
+				// mark filters root so view/title menu items can target it
+				filtersRoot.contextValue = "filtersRoot";
+
+				const problemsLabel = this._buildProblemsLabel();
+				const problemsRoot = new vscode.TreeItem(problemsLabel, vscode.TreeItemCollapsibleState.Expanded);
+				problemsRoot.iconPath = new vscode.ThemeIcon("list-tree");
+
+				items.push(filtersRoot, problemsRoot);
+			} else {
+				// Show welcome message when not logged in
+				const welcome = new vscode.TreeItem("Please sign in using the button above", vscode.TreeItemCollapsibleState.None);
+				welcome.iconPath = new vscode.ThemeIcon("info");
+				welcome.description = "";
+				items.push(welcome);
 			}
 
-			const filtersRoot = new vscode.TreeItem("Filters", vscode.TreeItemCollapsibleState.Collapsed);
-			filtersRoot.iconPath = new vscode.ThemeIcon("filter");
-			// mark filters root so view/title menu items can target it
-			filtersRoot.contextValue = "filtersRoot";
-
-			const problemsLabel = this._buildProblemsLabel();
-			const problemsRoot = new vscode.TreeItem(problemsLabel, vscode.TreeItemCollapsibleState.Expanded);
-			problemsRoot.iconPath = new vscode.ThemeIcon("list-tree");
-
-			return [filtersRoot, problemsRoot];
+			return items;
 		}
 
 		// === FILTERS SECTION ===
@@ -343,7 +348,7 @@ export function activate(context) {
 		})
 	);
 
-	// Login and logout commands
+	// Authentication commands
 	context.subscriptions.push(
 		vscode.commands.registerCommand("leet.signIn", async () => {
 			try {
@@ -353,28 +358,28 @@ export function activate(context) {
 				vscode.window.showErrorMessage(`Login failed: ${e.message}`);
 			}
 		}),
-		vscode.commands.registerCommand("leet.logout", async () => {
+		vscode.commands.registerCommand("leet.signOut", async () => {
 			await context.globalState.update("leetcode_cookies", null);
 			await context.globalState.update("leetcode_user", null);
 			vscode.window.showInformationMessage("Logged out successfully.");
+			
+			// Close the webview panel if it exists
+			closeWebview();
+			
 			await refreshStatus();
 		})
 	);
 
-	// Status bar
-	const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-	status.command = "leet.logout";
-	context.subscriptions.push(status);
-
 	async function refreshStatus() {
 		const cookies = context.globalState.get("leetcode_cookies");
-		if (cookies?.length) {
-			status.text = "$(sign-out) Logout";
-			status.tooltip = "Logout from LeetCode";
-			status.show();
+		const loggedIn = Array.isArray(cookies) && cookies.length > 0;
+		
+		// Set context variables for menu visibility
+		vscode.commands.executeCommand('setContext', 'leetcode.loggedIn', loggedIn);
+		
+		if (loggedIn) {
 			notifySession(true);
 		} else {
-			status.hide();
 			notifySession(false);
 			provider._problems = [];
 		}
