@@ -74,14 +74,14 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
   }, []);
 
   return (
-    <div className='h-full flex flex-col bg-[#0a0a0a]'>
-      <div className='border-b border-gray-800 p-4 bg-[#1a1a1a]'>
+    <div className='h-full flex flex-col bg-editor'>
+      <div className='panel-header p-4'>
         <div className='flex items-center justify-between mb-3'>
-          <h3 className='text-lg font-semibold text-white'>🧪 Test Cases</h3>
+          <h3 className='text-lg font-semibold'>🧪 Test Cases</h3>
           <div className='flex gap-2'>
             <button
               onClick={addTestcase}
-              className='px-3 py-1.5 text-sm rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600 transition-colors flex items-center gap-1'
+              className='px-3 py-1.5 text-sm rounded-lg btn-outline transition-colors flex items-center gap-1'
             >
               <span className='text-xs'>+</span>
               Add Case
@@ -89,11 +89,11 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
             <button
               onClick={runRemote}
               disabled={!problem || testcases.length === 0 || remoteRunning}
-              className='px-4 py-1.5 text-sm font-medium rounded-lg bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white transition-colors flex items-center gap-2'
+              className='px-4 py-1.5 text-sm font-medium rounded-lg btn disabled:cursor-not-allowed transition-colors flex items-center gap-2'
             >
               {remoteRunning ? (
                 <>
-                  <div className='animate-spin h-3 w-3 border border-white border-t-transparent rounded-full'></div>
+                  <div className='animate-spin h-3 w-3 border border-current border-t-transparent rounded-full'></div>
                   Running...
                 </>
               ) : (
@@ -106,7 +106,7 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
             <button
               onClick={onSubmit}
               disabled={!problem || isSubmitting}
-              className='px-4 py-1.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white transition-colors flex items-center gap-2'
+              className='px-4 py-1.5 text-sm font-medium rounded-lg btn disabled:cursor-not-allowed transition-colors flex items-center gap-2'
             >
               {isSubmitting ? (
                 <>
@@ -137,9 +137,9 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
       </div>
 
       {remoteResults && (
-        <div className='border-t border-gray-800 bg-[#1a1a1a]'>
+        <div className='border-t border-panel bg-panel'>
           <div className='p-4'>
-            <div className='text-lg font-semibold text-white mb-3 flex items-center gap-2'>📊 Results</div>
+            <div className='text-lg font-semibold mb-3 flex items-center gap-2'>📊 Results</div>
             <RemoteResults remoteResults={remoteResults} testcases={testcases} metaData={metaData} />
           </div>
         </div>

@@ -2,24 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
+/* VS Code webview theme bridge */
+:root {
+  /* Base */
+  --bg: var(--vscode-editor-background, #1e1e1e);
+  --fg: var(--vscode-editor-foreground, #d4d4d4);
+  --muted: var(--vscode-descriptionForeground, #9da7b3);
+  --border: var(--vscode-panel-border, #3c3c3c);
+  --panel-bg: var(--vscode-editorWidget-background, #252526);
+
+  /* Accents */
+  --link: var(--vscode-textLink-foreground, #3794ff);
+  --error: var(--vscode-errorForeground, #f14c4c);
+  --warning: var(--vscode-editorWarning-foreground, #cca700);
+  --info: var(--vscode-editorInfo-foreground, #75beff);
+  --success: var(--vscode-testing-iconPassed, #89d185);
+  --danger: var(--vscode-testing-iconFailed, #f14c4c);
+
+  /* Controls */
+  --btn-bg: var(--vscode-button-background, #0e639c);
+  --btn-fg: var(--vscode-button-foreground, #ffffff);
+  --btn-hover-bg: var(--vscode-button-hoverBackground, #1177bb);
+  --input-bg: var(--vscode-input-background, #3c3c3c);
+  --input-fg: var(--vscode-input-foreground, #d4d4d4);
+  --badge-bg: var(--vscode-badge-background, #4d4d4d);
+  --badge-fg: var(--vscode-badge-foreground, #ffffff);
+}
+
+/* App-wide surfaces */
+body, #root, .bg-editor {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+}
+
+.bg-panel { background: var(--panel-bg); color: var(--fg); }
+
+.panel-header {
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.border-panel { border-color: var(--border); }
+.text-muted { color: var(--muted); }
+.text-link { color: var(--link); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-info { color: var(--info); }
+
+.status-success { border-left: 3px solid var(--success); }
+.status-danger  { border-left: 3px solid var(--danger); }
+.status-warning { border-left: 3px solid var(--warning); }
+.status-info    { border-left: 3px solid var(--info); }
+
+/* Buttons */
+.btn {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid transparent;
+}
+.btn:hover { background: var(--btn-hover-bg); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--fg); }
+
+.chip { background: var(--badge-bg); color: var(--badge-fg); }
+.chip-success { border: 1px solid var(--success); color: var(--success); background: transparent; }
+.chip-danger  { border: 1px solid var(--danger);  color: var(--danger);  background: transparent; }
+.chip-info    { border: 1px solid var(--info);    color: var(--info);    background: transparent; }
+
+.code-surface {
+  background: var(--input-bg);
+  color: var(--input-fg);
+  border: 1px solid var(--border);
+}
+
 .leetcode-content {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .leetcode-content pre {
-  @apply bg-gray-900/50 border border-gray-700 rounded-lg p-3 my-3 overflow-x-auto;
+  @apply rounded-lg p-3 my-3 overflow-x-auto;
+  background: var(--input-bg);
+  color: var(--input-fg);
+  border: 1px solid var(--border);
   font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
   font-size: 13px;
   line-height: 1.5;
 }
 
 .leetcode-content code:not(pre code) {
-  @apply bg-gray-800/60 text-orange-300 px-1.5 py-0.5 rounded text-sm border border-gray-700/50;
+  @apply px-1.5 py-0.5 rounded text-sm;
+  background: var(--panel-bg);
+  color: var(--info);
+  border: 1px solid var(--border);
   font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 }
 
 .leetcode-content strong {
-  @apply text-white font-semibold;
+  @apply font-semibold;
+  color: var(--fg);
 }
 
 .leetcode-content ul, .leetcode-content ol {
@@ -39,7 +132,8 @@
 }
 
 .leetcode-content h1, .leetcode-content h2, .leetcode-content h3 {
-  @apply text-white font-semibold mt-4 mb-2;
+  @apply font-semibold mt-4 mb-2;
+  color: var(--fg);
 }
 
 .leetcode-content h1 { @apply text-xl; }
@@ -47,23 +141,31 @@
 .leetcode-content h3 { @apply text-base; }
 
 .leetcode-content blockquote {
-  @apply border-l-4 border-blue-500 bg-blue-900/10 pl-4 py-2 my-3 italic text-blue-200;
+  @apply pl-4 py-2 my-3 italic;
+  border-left: 4px solid var(--info);
+  background: transparent;
+  color: var(--info);
 }
 
 .leetcode-content a {
-  @apply text-blue-400 hover:text-blue-300 underline;
+  @apply underline;
+  color: var(--link);
 }
 
 .leetcode-content table {
-  @apply border-collapse border border-gray-700 my-4 w-full;
+  @apply border-collapse my-4 w-full;
+  border: 1px solid var(--border);
 }
 
 .leetcode-content th, .leetcode-content td {
-  @apply border border-gray-700 px-3 py-2 text-sm;
+  @apply px-3 py-2 text-sm;
+  border: 1px solid var(--border);
 }
 
 .leetcode-content th {
-  @apply bg-gray-800/50 font-semibold text-white;
+  @apply font-semibold;
+  background: var(--panel-bg);
+  color: var(--fg);
 }
 
 /* Custom scrollbar */
@@ -75,17 +177,18 @@
 
 .leetcode-content::-webkit-scrollbar-track,
 *::-webkit-scrollbar-track {
-  @apply bg-gray-800/30;
+  background: var(--panel-bg);
 }
 
 .leetcode-content::-webkit-scrollbar-thumb,
 *::-webkit-scrollbar-thumb {
-  @apply bg-gray-600 rounded;
+  border-radius: 6px;
+  background: var(--border);
 }
 
 .leetcode-content::-webkit-scrollbar-thumb:hover,
 *::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  background: var(--muted);
 }
 
 /* Loading spinner */
