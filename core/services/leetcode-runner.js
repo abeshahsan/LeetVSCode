@@ -5,6 +5,7 @@ import { ProblemDetailsQuery } from "../leetcode-utils.js";
 import ProblemDetails from "../../models/problem-details.js";
 import { leetcodeOutputChannel } from "../../output-logger.js";
 import { readJsonOrText } from "../utils/http.js";
+import { stripEditorSupport } from "../utils/editor-support.js";
 
 function getCookieContext(context) {
   const cookies = context.globalState.get("leetcode_cookies") || [];
@@ -33,7 +34,8 @@ async function loadTypedCode(context, slug) {
   const exts = ["cpp", "java", "py", "js", "ts", "c", "cs", "go"];
   const found = exts.map((e) => path.join(solutionsDir, `${slug}.${e}`)).find(fs.existsSync);
   if (!found) return "";
-  return fs.readFileSync(found, "utf8");
+  const raw = fs.readFileSync(found, "utf8");
+  return stripEditorSupport(raw);
 }
 
 export async function runRemote(panel, context, { slug, langSlug, input }) {

@@ -2,6 +2,7 @@ import path from "path";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import { langToExtentionMap } from "../leetcode-utils.js";
+import { injectEditorSupport } from "../utils/editor-support.js";
 
 export async function openOrCreateSolutionFile(context, { slug, langSlug, code }) {
   const ext = langToExtentionMap[langSlug] || "txt";
@@ -11,8 +12,9 @@ export async function openOrCreateSolutionFile(context, { slug, langSlug, code }
 
   if (!fs.existsSync(filePath)) {
     const header = `// ${slug} (${langSlug})\n`;
-    const initial = code ? `${code}\n` : header;
-    fs.writeFileSync(filePath, initial, "utf8");
+    const base = code ? `${code}\n` : header;
+    const withSupport = injectEditorSupport(base, langSlug);
+    fs.writeFileSync(filePath, withSupport, "utf8");
   }
 
   const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
