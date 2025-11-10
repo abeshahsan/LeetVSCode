@@ -100,10 +100,7 @@
 			]
 		},
 		"viewsWelcome": [
-			{
-				"view": "leetView",
-				"contents": "# LeetCode\n[Sign In](command:leet.signIn)"
-			}
+			
 		],
 		"menus": {
 			"view/title": [

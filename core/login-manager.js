@@ -42,12 +42,12 @@ export async function runPlaywrightLogin(context) {
 		page = await browserContext.newPage();
 		await page.goto("https://leetcode.com/accounts/login/", { waitUntil: "domcontentloaded" });
 
-		vscode.window.showInformationMessage("🟡 Please complete login manually...");
+		// vscode.window.showInformationMessage("🟡 Please complete login manually...");
 
 		let loginDetected = false;
 		page.on("response", async (response) => {
 			console.log("lol");
-			
+
 			try {
 				const url = response.url();
 				if (url.includes("/graphql/") && response.status() === 200) {
@@ -91,7 +91,11 @@ export async function runPlaywrightLogin(context) {
 
 		return { user, cookies };
 	} finally {
-		try { await page?.close(); } catch {}
-		try { await browserContext?.close(); } catch {}
+		try {
+			await page?.close();
+		} catch {}
+		try {
+			await browserContext?.close();
+		} catch {}
 	}
 }
