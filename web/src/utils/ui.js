@@ -44,13 +44,13 @@ export function parseFailedTestInput(inputStr, paramCount) {
 export function getDifficultyStyles(difficulty) {
 	switch ((difficulty || "").toLowerCase()) {
 		case "easy":
-			return "text-green-500 bg-green-500/10 border-green-500/20";
+			return "text-green-400 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-400/50 shadow-lg shadow-green-500/20";
 		case "medium":
-			return "text-yellow-500 bg-yellow-500/10 border-yellow-500/20";
+			return "text-yellow-400 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-400/50 shadow-lg shadow-yellow-500/20";
 		case "hard":
-			return "text-red-500 bg-red-500/10 border-red-500/20";
+			return "text-red-400 bg-gradient-to-r from-red-500/20 to-pink-500/20 border-red-400/50 shadow-lg shadow-red-500/20";
 		default:
-			return "text-gray-400 bg-gray-500/10 border-gray-500/20";
+			return "text-gray-400 bg-gradient-to-r from-gray-500/20 to-slate-500/20 border-gray-400/50";
 	}
 }
 

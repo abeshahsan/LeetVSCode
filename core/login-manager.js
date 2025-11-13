@@ -1,6 +1,5 @@
 import path from "path";
 import * as vscode from "vscode";
-import * as fs from "fs";
 import { chromium } from "playwright";
 
 export async function runLoginProcess(panel, context) {
@@ -33,6 +32,7 @@ export async function runPlaywrightLogin(context) {
 	let browserContext;
 	let page;
 	let user = null;
+
 	try {
 		browserContext = await chromium.launchPersistentContext(userDataDir, {
 			headless: false,
@@ -42,12 +42,8 @@ export async function runPlaywrightLogin(context) {
 		page = await browserContext.newPage();
 		await page.goto("https://leetcode.com/accounts/login/", { waitUntil: "domcontentloaded" });
 
-		// vscode.window.showInformationMessage("🟡 Please complete login manually...");
-
 		let loginDetected = false;
 		page.on("response", async (response) => {
-			console.log("lol");
-
 			try {
 				const url = response.url();
 				if (url.includes("/graphql/") && response.status() === 200) {
@@ -62,40 +58,45 @@ export async function runPlaywrightLogin(context) {
 			}
 		});
 
-		async function waitForLogin(ctx, page, { timeoutMs = 180000, pollMs = 1000 } = {}) {
-			const start = Date.now();
-			while (Date.now() - start < timeoutMs) {
-				const all = await ctx.cookies();
-				const sess = all.find((c) => c.name === "LEETCODE_SESSION" && c.value);
-				const csrf = all.find((c) => c.name === "csrftoken" && c.value);
-				const url = page.url();
-				if (sess || csrf || !url.includes("/accounts/login")) {
-					return all;
-				}
-				await new Promise((r) => setTimeout(r, pollMs));
-			}
-			return null;
-		}
-
-		let cookies = await waitForLogin(browserContext, page);
+		const cookies = await waitForLogin(browserContext, page);
 		const sessionCookie = cookies?.find((c) => c.name === "LEETCODE_SESSION" && c.value);
 		if (!loginDetected && !sessionCookie) {
 			throw new Error("Login not detected (timeout). Please keep the browser open and complete the login.");
 		}
 
-		if (!cookies) {
-			cookies = await browserContext.cookies();
-		}
-
+		const finalCookies = cookies || (await browserContext.cookies());
 		vscode.window.showInformationMessage(`✅ Logged in`);
 
-		return { user, cookies };
+		return { user, cookies: finalCookies };
 	} finally {
-		try {
-			await page?.close();
-		} catch {}
-		try {
-			await browserContext?.close();
-		} catch {}
+		await closeResources(page, browserContext);
+	}
+}
+
+async function waitForLogin(ctx, page, { timeoutMs = 180000, pollMs = 1000 } = {}) {
+	const start = Date.now();
+	while (Date.now() - start < timeoutMs) {
+		const all = await ctx.cookies();
+		const sess = all.find((c) => c.name === "LEETCODE_SESSION" && c.value);
+		const csrf = all.find((c) => c.name === "csrftoken" && c.value);
+		const url = page.url();
+		if (sess || csrf || !url.includes("/accounts/login")) {
+			return all;
+		}
+		await new Promise((r) => setTimeout(r, pollMs));
+	}
+	return null;
+}
+
+async function closeResources(page, browserContext) {
+	try {
+		await page?.close();
+	} catch (e) {
+		// ignore close errors
+	}
+	try {
+		await browserContext?.close();
+	} catch (e) {
+		// ignore close errors
 	}
 }

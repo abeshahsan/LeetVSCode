@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ProblemListQuery } from "./leetcode-utils.js";
+import { ProblemListQuery } from "./services/leetcode-queries.js";
 import { leetcodeOutputChannel } from "../output-logger.js";
 
 export class LeetViewProvider {
@@ -63,159 +63,160 @@ export class LeetViewProvider {
 		const cookies = this.context.globalState.get("leetcode_cookies");
 		const loggedIn = Array.isArray(cookies) && cookies.length > 0;
 
-		// === ROOT LEVEL ===
-		if (!element) {
-			const items = [];
+		if (!element) return this._getRootItems(loggedIn);
+		if (element.label === "Filters") return this._getFilterItems();
+		if (element.label && element.label.startsWith("Problems")) return this._getProblemItems(cookies);
 
-			// Only show filters and problems if logged in
-			if (loggedIn) {
-				const filtersRoot = new vscode.TreeItem("Filters", vscode.TreeItemCollapsibleState.Collapsed);
-				filtersRoot.iconPath = new vscode.ThemeIcon("filter");
-				// mark filters root so view/title menu items can target it
-				filtersRoot.contextValue = "filtersRoot";
+		return [];
+	}
 
-				const problemsLabel = this._buildProblemsLabel();
-				const problemsRoot = new vscode.TreeItem(problemsLabel, vscode.TreeItemCollapsibleState.Expanded);
-				problemsRoot.iconPath = new vscode.ThemeIcon("list-tree");
-
-				items.push(filtersRoot, problemsRoot);
-			} else {
-				// Show welcome message when not logged in
-				const welcome = new vscode.TreeItem(
-					"Please sign in using the button above",
-					vscode.TreeItemCollapsibleState.None
-				);
-				welcome.iconPath = new vscode.ThemeIcon("info");
-				welcome.description = "";
-				items.push(welcome);
-			}
-
-			return items;
+	_getRootItems(loggedIn) {
+		const items = [];
+		if (loggedIn) {
+			items.push(this._createFiltersRoot(), this._createProblemsRoot());
+		} else {
+			items.push(this._createWelcomeItem());
 		}
+		return items;
+	}
 
-		// === FILTERS SECTION ===
-		if (element.label === "Filters") {
-			const items = [];
+	_createFiltersRoot() {
+		const filtersRoot = new vscode.TreeItem("Filters", vscode.TreeItemCollapsibleState.Collapsed);
+		filtersRoot.iconPath = new vscode.ThemeIcon("filter");
+		filtersRoot.contextValue = "filtersRoot";
+		return filtersRoot;
+	}
 
-			// Search
-			const searchItem = new vscode.TreeItem(
-				this._searchTerm ? `Search: "${this._searchTerm}"` : "Search Problems",
-				vscode.TreeItemCollapsibleState.None
+	_createProblemsRoot() {
+		const problemsLabel = this._buildProblemsLabel();
+		const problemsRoot = new vscode.TreeItem(problemsLabel, vscode.TreeItemCollapsibleState.Expanded);
+		problemsRoot.iconPath = new vscode.ThemeIcon("list-tree");
+		return problemsRoot;
+	}
+
+	_createWelcomeItem() {
+		const welcome = new vscode.TreeItem(
+			"Please sign in using the button above",
+			vscode.TreeItemCollapsibleState.None
+		);
+		welcome.iconPath = new vscode.ThemeIcon("info");
+		welcome.description = "";
+		return welcome;
+	}
+
+	_getFilterItems() {
+		const items = [];
+		items.push(this._buildSearchItem());
+		items.push(...this._buildDifficultyItems());
+
+		if (this._tagFilters.length > 0) items.push(...this._buildTagFilterItems());
+		items.push(this._buildAddTagItem());
+
+		return items;
+	}
+
+	_buildSearchItem() {
+		const searchItem = new vscode.TreeItem(
+			this._searchTerm ? `Search: "${this._searchTerm}"` : "Search Problems",
+			vscode.TreeItemCollapsibleState.None
+		);
+		searchItem.command = { command: "leet.search", title: "Search" };
+		searchItem.iconPath = new vscode.ThemeIcon("search");
+		searchItem.description = this._searchTerm ? "Click to modify" : "";
+		return searchItem;
+	}
+
+	_buildDifficultyItems() {
+		const items = [];
+		const levels = ["Easy", "Medium", "Hard"];
+		for (const level of levels) {
+			const active = this._filters.includes(level);
+			const item = new vscode.TreeItem(level, vscode.TreeItemCollapsibleState.None);
+			item.iconPath = new vscode.ThemeIcon(
+				active ? "check" : "circle-outline",
+				new vscode.ThemeColor(
+					level === "Easy" ? "charts.green" : level === "Medium" ? "charts.yellow" : "charts.red"
+				)
 			);
-			searchItem.command = { command: "leet.search", title: "Search" };
-			searchItem.iconPath = new vscode.ThemeIcon("search");
-			searchItem.description = this._searchTerm ? "Click to modify" : "";
-			items.push(searchItem);
+			item.command = { command: `leet.toggle${level}`, title: `Toggle ${level}` };
+			item.description = active ? "✓" : "";
+			items.push(item);
+		}
+		return items;
+	}
 
-			// Difficulty filters
-			const levels = ["Easy", "Medium", "Hard"];
-			for (const level of levels) {
-				const active = this._filters.includes(level);
-				const item = new vscode.TreeItem(level, vscode.TreeItemCollapsibleState.None);
-				item.iconPath = new vscode.ThemeIcon(
-					active ? "check" : "circle-outline",
-					new vscode.ThemeColor(
-						level === "Easy" ? "charts.green" : level === "Medium" ? "charts.yellow" : "charts.red"
-					)
-				);
-				item.command = {
-					command: `leet.toggle${level}`,
-					title: `Toggle ${level}`,
-				};
-				item.description = active ? "✓" : "";
-				items.push(item);
+	_buildTagFilterItems() {
+		const items = [];
+		for (const tag of this._tagFilters) {
+			const tagItem = new vscode.TreeItem(`#${tag}`, vscode.TreeItemCollapsibleState.None);
+			tagItem.iconPath = new vscode.ThemeIcon("tag", new vscode.ThemeColor("charts.blue"));
+			tagItem.command = { command: "leet.removeTag", title: "Remove Tag", arguments: [tag] };
+			tagItem.description = "✓ Click to remove";
+			items.push(tagItem);
+		}
+		return items;
+	}
+
+	_buildAddTagItem() {
+		const addTagItem = new vscode.TreeItem("+ Add Tag Filter", vscode.TreeItemCollapsibleState.None);
+		addTagItem.iconPath = new vscode.ThemeIcon("add");
+		addTagItem.command = { command: "leet.addTag", title: "Add Tag Filter" };
+		addTagItem.description = "Select tags";
+		return addTagItem;
+	}
+
+	async _getProblemItems(cookies) {
+		if (!this._problems.length && !this._loading) {
+			this._loading = true;
+			try {
+				const client = new ProblemListQuery({ cookies });
+				const data = await client.run();
+				this._problems = data?.problemsetQuestionList?.questions || [];
+			} catch (e) {
+				vscode.window.showErrorMessage(`Failed to load problems: ${e.message || e}`);
+			} finally {
+				this._loading = false;
 			}
-
-			// Tag filters section
-			if (this._tagFilters.length > 0) {
-				// Show active tags
-				for (const tag of this._tagFilters) {
-					const tagItem = new vscode.TreeItem(`#${tag}`, vscode.TreeItemCollapsibleState.None);
-					tagItem.iconPath = new vscode.ThemeIcon("tag", new vscode.ThemeColor("charts.blue"));
-					tagItem.command = { command: "leet.removeTag", title: "Remove Tag", arguments: [tag] };
-					tagItem.description = "✓ Click to remove";
-					items.push(tagItem);
-				}
-			}
-
-			// Add new tag option
-			const addTagItem = new vscode.TreeItem("+ Add Tag Filter", vscode.TreeItemCollapsibleState.None);
-			addTagItem.iconPath = new vscode.ThemeIcon("add");
-			addTagItem.command = { command: "leet.addTag", title: "Add Tag Filter" };
-			addTagItem.description = "Select tags";
-			items.push(addTagItem);
-
-			return items;
 		}
 
-		// === PROBLEMS SECTION ===
-		if (element.label && element.label.startsWith("Problems")) {
-			if (!this._problems.length && !this._loading) {
-				const cookies = this.context.globalState.get("leetcode_cookies");
-				this._loading = true;
-				try {
-					const client = new ProblemListQuery({ cookies });
-					const data = await client.run();
-					this._problems = data?.problemsetQuestionList?.questions || [];
-				} catch (e) {
-					vscode.window.showErrorMessage(`Failed to load problems: ${e.message || e}`);
-				} finally {
-					this._loading = false;
-				}
-			}
-
-			if (this._loading) {
-				const loading = new vscode.TreeItem("Loading problems...", vscode.TreeItemCollapsibleState.None);
-				loading.iconPath = new vscode.ThemeIcon("sync~spin");
-				return [loading];
-			}
-
-			if (!this._problems.length) {
-				const empty = new vscode.TreeItem("No problems found.", vscode.TreeItemCollapsibleState.None);
-				empty.iconPath = new vscode.ThemeIcon("warning");
-				return [empty];
-			}
-
-			const filtered = this._applyFilters(this._problems);
-
-			const items = filtered.map((q) => {
-				const label = `${q.frontendId}. ${q.title}`;
-				const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-
-				const tags = q.topicTags
-					?.slice(0, 3)
-					.map((t) => t.name)
-					.join(", ");
-				const tagText = tags ? ` • ${tags}` : "";
-
-				item.tooltip = `${q.difficulty} • ${Math.round(q.acRate)}%${tagText}`;
-
-				item.iconPath = new vscode.ThemeIcon(
-					"circle-filled",
-					new vscode.ThemeColor(
-						q.difficulty === "Easy"
-							? "charts.green"
-							: q.difficulty === "Medium"
-							? "charts.yellow"
-							: "charts.red"
-					)
-				);
-
-				// Short sidebar status
-				item.description = `   ${
-					q?.status === "ac" ? "✅ Solved" : q?.status === "notac" ? "⚠️ Attempted" : ""
-				}`;
-				item.command = {
-					command: "leet.openProblem",
-					title: "Open Problem",
-					arguments: [q.titleSlug],
-				};
-
-				return item;
-			});
-
-			return items;
+		if (this._loading) {
+			const loading = new vscode.TreeItem("Loading problems...", vscode.TreeItemCollapsibleState.None);
+			loading.iconPath = new vscode.ThemeIcon("sync~spin");
+			return [loading];
 		}
+
+		if (!this._problems.length) {
+			const empty = new vscode.TreeItem("No problems found.", vscode.TreeItemCollapsibleState.None);
+			empty.iconPath = new vscode.ThemeIcon("warning");
+			return [empty];
+		}
+
+		const filtered = this._applyFilters(this._problems);
+		return filtered.map((q) => this._createProblemItem(q));
+	}
+
+	_createProblemItem(q) {
+		const label = `${q.frontendId}. ${q.title}`;
+		const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+
+		const tags = q.topicTags
+			?.slice(0, 3)
+			.map((t) => t.name)
+			.join(", ");
+		const tagText = tags ? ` • ${tags}` : "";
+
+		item.tooltip = `${q.difficulty} • ${Math.round(q.acRate)}%${tagText}`;
+
+		item.iconPath = new vscode.ThemeIcon(
+			"circle-filled",
+			new vscode.ThemeColor(
+				q.difficulty === "Easy" ? "charts.green" : q.difficulty === "Medium" ? "charts.yellow" : "charts.red"
+			)
+		);
+
+		item.description = `   ${q?.status === "ac" ? "✅ Solved" : q?.status === "notac" ? "⚠️ Attempted" : ""}`;
+		item.command = { command: "leet.openProblem", title: "Open Problem", arguments: [q.titleSlug] };
+		return item;
 	}
 
 	_applyFilters(problems) {
@@ -234,7 +235,7 @@ export class LeetViewProvider {
 				const title = q.title?.toLowerCase() ?? "";
 				const slug = q.titleSlug?.toLowerCase() ?? "";
 				const concat = `${id} ${title} ${slug}`;
-        // leetcodeOutputChannel.appendLine(`[LeetViewProvider] Searching for "${s}" in "${concat}"`);
+				// leetcodeOutputChannel.appendLine(`[LeetViewProvider] Searching for "${s}" in "${concat}"`);
 				return concat.includes(s);
 			});
 		}

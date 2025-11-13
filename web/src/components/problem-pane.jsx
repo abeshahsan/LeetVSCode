@@ -120,9 +120,9 @@ function ProblemPane({ problem }) {
 	};
 
 	return (
-		<div className='h-full flex flex-col bg-[#0a0a0a]'>
+		<div className='h-full flex flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/30'>
 			{/* Tab Header */}
-			<div className='flex items-center border-b border-gray-800 bg-[#1a1a1a]'>
+			<div className='flex items-center border-b border-blue-500/30 bg-gradient-to-r from-slate-900/80 via-blue-900/10 to-slate-900/80 backdrop-blur-sm'>
 				{tabs.map((tab) => (
 					<div
 						key={tab.id}
@@ -130,10 +130,10 @@ function ProblemPane({ problem }) {
 					>
 						<button
 							onClick={() => setActiveTab(tab.id)}
-							className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+							className={`px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-300 ${
 								activeTab === tab.id
-									? "text-blue-400 border-blue-400 bg-gray-800/50"
-									: "text-gray-400 border-transparent hover:text-gray-300 hover:border-gray-600"
+									? "text-cyan-400 border-cyan-400 bg-gradient-to-t from-cyan-500/10 to-transparent shadow-lg shadow-cyan-500/20"
+									: "text-gray-400 border-transparent hover:text-cyan-300 hover:border-cyan-500/50 hover:bg-slate-800/50"
 							}`}
 						>
 							{tab.label}
@@ -141,7 +141,7 @@ function ProblemPane({ problem }) {
 						{tab.closable && (
 							<button
 								onClick={() => closeTab(tab.id)}
-								className='ml-1 p-1 text-gray-500 hover:text-gray-300 hover:bg-gray-700 rounded'
+								className='ml-1 p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-all duration-200'
 							>
 								×
 							</button>
@@ -155,7 +155,7 @@ function ProblemPane({ problem }) {
 				{activeTab === "description" && (
 					<div className='h-full flex flex-col'>
 						{/* Problem Header Section */}
-						<div className='border-b border-gray-800 p-4 bg-[#1a1a1a]'>
+						<div className='border-b border-blue-500/20 p-5 bg-gradient-to-br from-slate-900/60 via-blue-900/20 to-purple-900/20 backdrop-blur-sm'>
 							{/* Status Badge */}
 							<div className='flex items-center justify-between'>
 								<div />
@@ -164,9 +164,11 @@ function ProblemPane({ problem }) {
 										const status = computeStatus();
 										return (
 											<span
-												className={`px-2 py-1 text-xs rounded-md border ${getStatusClass(
-													status
-												)}`}
+												className={`px-3 py-1.5 text-xs font-bold rounded-lg border shadow-lg ${
+													status === 'Solved' ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-400/50 text-green-300' :
+													status === 'Attempted' ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-400/50 text-yellow-300' :
+													'bg-gradient-to-r from-gray-500/20 to-slate-500/20 border-gray-400/50 text-gray-300'
+												} ${getStatusClass(status)}`}
 											>
 												{status}
 											</span>
@@ -176,41 +178,43 @@ function ProblemPane({ problem }) {
 							</div>
 
 							{/* Stats Row */}
-							<div className='flex items-center gap-6 text-sm text-gray-400'>
+							<div className='flex items-center gap-6 text-sm mt-3'>
 								{problem?.acRate && (
-									<div className='flex items-center gap-1'>
-										<span className='text-green-500'>✓</span>
-										<span>Accepted: {parseFloat(problem.acRate).toFixed(1)}%</span>
+									<div className='flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30'>
+										<span className='text-green-400 text-base'>✓</span>
+										<span className='text-green-300 font-semibold'>{parseFloat(problem.acRate).toFixed(1)}%</span>
+										<span className='text-green-400/70 text-xs'>Accepted</span>
 									</div>
 								)}
 								{(problem?.likes || problem?.dislikes) && (
-									<div className='flex items-center gap-1'>
+									<div className='flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30'>
 										<span className='text-blue-400'>👍</span>
-										<span>{likePct}%</span>
-										<span className='text-gray-500'>({problem?.likes || 0})</span>
+										<span className='text-blue-300 font-semibold'>{likePct}%</span>
+										<span className='text-blue-400/70 text-xs'>({problem?.likes || 0} likes)</span>
 									</div>
 								)}
 								{problem?.submissions && (
-									<div className='flex items-center gap-1'>
+									<div className='flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30'>
 										<span className='text-purple-400'>📊</span>
-										<span>{problem.submissions} submissions</span>
+										<span className='text-purple-300 font-semibold'>{problem.submissions}</span>
+										<span className='text-purple-400/70 text-xs'>submissions</span>
 									</div>
 								)}
 							</div>
 
 							{/* Tags */}
 							{problem?.topicTags && problem.topicTags.length > 0 && (
-								<div className='flex flex-wrap gap-2 mt-3'>
+								<div className='flex flex-wrap gap-2 mt-4'>
 									{problem.topicTags.slice(0, 8).map((tag, idx) => (
 										<span
 											key={idx}
-											className='px-2 py-1 text-xs bg-gray-800 text-gray-300 rounded-md hover:bg-gray-700 cursor-pointer'
+											className='px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-slate-700/50 to-slate-600/50 text-cyan-300 rounded-lg hover:from-cyan-600/30 hover:to-blue-600/30 hover:text-cyan-200 border border-slate-600/50 hover:border-cyan-500/50 cursor-pointer transition-all duration-300 shadow-md hover:shadow-cyan-500/20 hover:scale-105'
 										>
 											{tag.name}
 										</span>
 									))}
 									{problem.topicTags.length > 8 && (
-										<span className='px-2 py-1 text-xs text-gray-500'>
+										<span className='px-3 py-1.5 text-xs text-purple-400 font-semibold'>
 											+{problem.topicTags.length - 8} more
 										</span>
 									)}
