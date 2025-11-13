@@ -1,6 +1,7 @@
 import path from "path";
 import * as vscode from "vscode";
 import { chromium } from "playwright";
+import { logError } from "../output-logger.js";
 
 export async function runLoginProcess(panel, context) {
 	try {
@@ -54,7 +55,7 @@ export async function runPlaywrightLogin(context) {
 					}
 				}
 			} catch (err) {
-				console.error(err);
+				logError(`Login response error: ${err.message}`);
 			}
 		});
 

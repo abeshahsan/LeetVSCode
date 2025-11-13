@@ -1,0 +1,51 @@
+# Development files
+.vscode/
+.vscode-test/
+.vscode-test.*
+test/
+*.test.js
+*.spec.js
+**/__tests__/
+
+# Build files
+web/src/
+web/node_modules/
+web/package*.json
+web/*.config.*
+web/README.md
+web/jsconfig.json
+web/eslint.config.js
+scripts/
+
+# Documentation (not needed in package)
+CONTRIBUTING.md
+SECURITY.md
+.github/
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Config files
+.editorconfig
+.prettierrc
+.eslintrc.*
+eslint.config.mjs
+jsconfig.json
+
+# Logs and temp files
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.*
+
+# User data
+Solutions/
+chrome-profile/
+node_modules/
+
+# Coverage and test results
+coverage/
+test-results/

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { ProblemListQuery } from "./services/leetcode-queries.js";
-import { leetcodeOutputChannel } from "../output-logger.js";
+import { logDebug } from "../output-logger.js";
 
 export class LeetViewProvider {
 	constructor(context) {

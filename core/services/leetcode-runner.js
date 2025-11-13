@@ -3,7 +3,7 @@ import * as fs from "fs";
 import fetch from "node-fetch";
 import { ProblemDetailsQuery } from "./leetcode-queries.js";
 import ProblemDetails from "../../models/problem-details.js";
-import { leetcodeOutputChannel } from "../../output-logger.js";
+import { logError, logDebug } from "../../output-logger.js";
 import { readJsonOrText } from "../utils/http.js";
 import { stripEditorSupport } from "../utils/editor-support.js";
 
@@ -30,18 +30,41 @@ function mapLang(langSlug) {
 }
 
 async function loadTypedCode(context, slug) {
-	const solutionsDir = path.join(context.extensionPath, "Solutions");
+	if (!slug) return "";
+	
+	const workspaceRoot = context.extensionPath;
+	const solutionsDir = path.join(workspaceRoot, "Solutions");
+	
+	if (!fs.existsSync(solutionsDir)) {
+		return "";
+	}
+	
 	const exts = ["cpp", "java", "py", "js", "ts", "c", "cs", "go"];
 	const found = exts.map((e) => path.join(solutionsDir, `${slug}.${e}`)).find(fs.existsSync);
 	if (!found) return "";
-	const raw = fs.readFileSync(found, "utf8");
-	return stripEditorSupport(raw);
+	
+	try {
+		const raw = fs.readFileSync(found, "utf8");
+		return stripEditorSupport(raw);
+	} catch (err) {
+		logError(`Failed to read solution file: ${err.message}`);
+		return "";
+	}
 }
 
 export async function runRemote(panel, context, { slug, langSlug, input }) {
+	if (!slug || !langSlug) {
+		throw new Error("Missing required parameters: slug and langSlug");
+	}
+	
 	try {
 		leetcodeOutputChannel.appendLine(`[run-remote] Starting with slug=${slug}, lang=${langSlug}`);
 		const { cookies, cookieStr, csrftoken } = getCookieContext(context);
+		
+		if (!cookies || cookies.length === 0) {
+			throw new Error("Not logged in. Please sign in first.");
+		}
+		
 		leetcodeOutputChannel.appendLine(`[run-remote] Found ${cookies.length} cookies`);
 
 		const questionId = await _getQuestionIdSafe(cookies, slug);
@@ -202,8 +225,8 @@ async function _pollCheck(checkUrl, cookieStr, csrftoken, prefix, referer, isFin
 		});
 
 		const { obj: checkObj, text: checkText } = await readJsonOrText(checkRes);
-		leetcodeOutputChannel.appendLine(`[${prefix}] Attempt ${attempt} status: ${checkRes.status}`);
-		leetcodeOutputChannel.appendLine(`[${prefix}] Attempt ${attempt} response: ${checkText}`);
+		logDebug(`[${prefix}] Attempt ${attempt} status: ${checkRes.status}`);
+		logDebug(`[${prefix}] Attempt ${attempt} response: ${checkText}`);
 
 		if (isFinal(checkObj)) {
 			return checkObj;

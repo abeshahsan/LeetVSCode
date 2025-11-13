@@ -6,7 +6,7 @@ import { getWebviewHtml } from "./services/webview-template.js";
 import { openOrCreateSolutionFile } from "./services/solution-file.js";
 import { runRemote, submitSolution } from "./services/leetcode-runner.js";
 import { openProblemFromSlug, getProblemDetailsJson } from "./services/problem-service.js";
-import { leetcodeOutputChannel } from "../output-logger.js";
+import { logInfo, logError, logDebug } from "../output-logger.js";
 
 let panel;
 
@@ -45,11 +45,11 @@ function _createPanel(context, savedState) {
 }
 
 function _attachWebviewHandlers(panelInstance, context) {
-	panelInstance.webview.onDidReceiveMessage(async (message) => {
+		panelInstance.webview.onDidReceiveMessage(async (message) => {
 		try {
 			await _handleWebviewMessage(message, panelInstance, context);
 		} catch (err) {
-			console.error("Webview message handling error:", err);
+			logError(`Webview message handling error: ${err.message}`);
 			vscode.window.showErrorMessage(`Error: ${err.message}`);
 		}
 	});
@@ -96,7 +96,7 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 
 		case "getAllProblems": {
 			try {
-				leetcodeOutputChannel.appendLine(`[getAllProblems] Fetching all problems`);
+				logDebug(`Fetching all problems`);
 				let cookies = context.globalState.get("leetcode_cookies");
 				const data = await new ProblemListQuery({ cookies }).run();
 				const problems = data?.problemsetQuestionList?.questions || [];
@@ -105,10 +105,10 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 					new Problem(element).addToAll();
 				});
 
-				leetcodeOutputChannel.appendLine(`[getAllProblems] Found ${problems.length} problems`);
+				logDebug(`Found ${problems.length} problems`);
 				panelInstance?.webview.postMessage({ command: "allProblems", data: problems });
 			} catch (err) {
-				leetcodeOutputChannel.appendLine(`[getAllProblems] Error: ${err.message}`);
+				logError(`Failed to fetch problems: ${err.message}`);
 				panelInstance?.webview.postMessage({ command: "allProblemsError", error: String(err) });
 			}
 			break;
@@ -166,7 +166,7 @@ export async function openProblemFromExtension(context, titleSlug) {
 		createOrShowWebview(context);
 		await openProblemFromSlug(context, titleSlug, panel);
 	} catch (err) {
-		console.error("Failed to open problem from extension:", err);
+		logError(`Failed to open problem: ${err.message}`);
 		vscode.window.showErrorMessage(`Failed to open problem: ${err.message}`);
 	}
 }

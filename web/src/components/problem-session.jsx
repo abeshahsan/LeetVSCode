@@ -30,7 +30,7 @@ export default function ProblemSession({ data, onBack }) {
 			});
 		} catch (e) {
 			// ignore
-			console.warn("Failed to post open-solution-file message", e);
+			// Failed to post message
 		}
 	}
 
@@ -92,7 +92,7 @@ export default function ProblemSession({ data, onBack }) {
 									try {
 										window.__SELECTED_LANG__ = val;
 									} catch (e) {
-										console.warn("Could not set __SELECTED_LANG__", e);
+										// Failed to set language preference
 									}
 								}}
 							>

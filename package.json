@@ -1,16 +1,40 @@
 {
-	"name": "webview",
+	"name": "vs-leet",
 	"publisher": "abeshahsan",
-	"displayName": "webview",
-	"description": "LeetCode VS Code integration with webview and filters",
+	"displayName": "VS-Leet - LeetCode Integration",
+	"description": "Complete LeetCode integration for VS Code - Browse, solve, test, and submit coding problems directly in your editor",
 	"type": "module",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"engines": {
 		"vscode": "^1.104.0"
 	},
 	"categories": [
+		"Programming Languages",
+		"Education",
 		"Other"
 	],
+	"keywords": [
+		"leetcode",
+		"algorithm",
+		"interview",
+		"coding",
+		"practice",
+		"competitive programming",
+		"dsa",
+		"data structures"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/abeshahsan/VS-Leet.git"
+	},
+	"bugs": {
+		"url": "https://github.com/abeshahsan/VS-Leet/issues"
+	},
+	"license": "MIT",
+	"galleryBanner": {
+		"color": "#1e1e1e",
+		"theme": "dark"
+	},
 	"activationEvents": [
 		"onStartupFinished"
 	],
@@ -19,21 +43,26 @@
 		"commands": [
 			{
 				"command": "webview.leetcode",
-				"title": "LeetCode"
+				"title": "LeetCode: Open Problem Browser",
+				"category": "LeetCode",
+				"icon": "$(home)"
 			},
 			{
 				"command": "leet.signIn",
 				"title": "Sign In to LeetCode",
+				"category": "LeetCode",
 				"icon": "$(account)"
 			},
 			{
 				"command": "leet.signOut",
 				"title": "Sign Out from LeetCode",
+				"category": "LeetCode",
 				"icon": "$(sign-out)"
 			},
 			{
 				"command": "leet.openProblem",
-				"title": "Open LeetCode Problem"
+				"title": "Open Problem",
+				"category": "LeetCode"
 			},
 			{
 				"command": "leet.filterEasy",
@@ -164,12 +193,23 @@
 		],
 		"configuration": {
 			"type": "object",
-			"title": "Webview Extension",
+			"title": "VS-Leet",
 			"properties": {
-				"webview.autoShow": {
+				"vs-leet.autoShow": {
 					"type": "boolean",
-					"default": true,
-					"description": "Automatically show the webview when VS Code starts. Set to false to disable automatic opening."
+					"default": false,
+					"description": "Automatically show the problem browser when VS Code starts"
+				},
+				"vs-leet.solutionFolder": {
+					"type": "string",
+					"default": "Solutions",
+					"description": "Folder name for storing solution files"
+				},
+				"vs-leet.defaultLanguage": {
+					"type": "string",
+					"default": "cpp",
+					"enum": ["cpp", "java", "python3", "javascript", "typescript"],
+					"description": "Default programming language for solutions"
 				}
 			}
 		}
@@ -177,7 +217,11 @@
 	"scripts": {
 		"lint": "eslint .",
 		"pretest": "npm run lint",
-		"test": "vscode-test"
+		"test": "vscode-test",
+		"vscode:prepublish": "npm run build:web",
+		"build:web": "cd web && npm install && npm run build",
+		"package": "vsce package",
+		"publish": "vsce publish"
 	},
 	"devDependencies": {
 		"@types/mocha": "^10.0.10",

@@ -5,9 +5,21 @@ import { langToExtentionMap } from "./leetcode-queries.js";
 import { injectEditorSupport } from "../utils/editor-support.js";
 
 export async function openOrCreateSolutionFile(context, { slug, langSlug, code }) {
+	if (!slug || !langSlug) {
+		throw new Error("Invalid parameters: slug and langSlug are required");
+	}
+	
 	const ext = langToExtentionMap[langSlug] || "txt";
-	const solutionsDir = path.join(context.extensionPath, "Solutions");
-	fs.mkdirSync(solutionsDir, { recursive: true });
+	// Use workspace folder if available, otherwise use extension path
+	const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || context.extensionPath;
+	const solutionsDir = path.join(workspaceRoot, "Solutions");
+	
+	try {
+		fs.mkdirSync(solutionsDir, { recursive: true });
+	} catch (err) {
+		throw new Error(`Failed to create Solutions directory: ${err.message}`);
+	}
+	
 	const filePath = path.join(solutionsDir, `${slug}.${ext}`);
 
 	if (!fs.existsSync(filePath)) {
