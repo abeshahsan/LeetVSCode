@@ -6,9 +6,14 @@ import { getWebviewHtml } from "./services/webview-template.js";
 import { openOrCreateSolutionFile } from "./services/solution-file.js";
 import { runRemote, submitSolution } from "./services/leetcode-runner.js";
 import { openProblemFromSlug, getProblemDetailsJson } from "./services/problem-service.js";
-import { logInfo, logError, logDebug } from "../output-logger.js";
+import logger from "./logger.js";
 
 let panel;
+let _provider; // Store provider reference for login refresh
+
+export function setProvider(provider) {
+	_provider = provider;
+}
 
 export function createOrShowWebview(context) {
 	const savedState = context.globalState.get("leetcode_state") || {};
@@ -35,7 +40,7 @@ function _revealExistingPanel() {
 }
 
 function _createPanel(context, savedState) {
-	const newPanel = vscode.window.createWebviewPanel("webview", "LeetVSCode", vscode.ViewColumn.One, {
+	const newPanel = vscode.window.createWebviewPanel("webview", "VS-Leet", vscode.ViewColumn.One, {
 		enableScripts: true,
 		retainContextWhenHidden: true,
 	});
@@ -45,11 +50,11 @@ function _createPanel(context, savedState) {
 }
 
 function _attachWebviewHandlers(panelInstance, context) {
-		panelInstance.webview.onDidReceiveMessage(async (message) => {
+	panelInstance.webview.onDidReceiveMessage(async (message) => {
 		try {
 			await _handleWebviewMessage(message, panelInstance, context);
 		} catch (err) {
-			logError(`Webview message handling error: ${err.message}`);
+			logger.error(`Webview message handling error: ${err.message}`);
 			vscode.window.showErrorMessage(`Error: ${err.message}`);
 		}
 	});
@@ -67,7 +72,11 @@ function _attachDisposeHandler(panelInstance) {
 async function _handleWebviewMessage(message, panelInstance, context) {
 	switch (message.command) {
 		case "login":
-			await runLoginProcess(panelInstance, context);
+			await runLoginProcess(panelInstance, context, _provider);
+			// Trigger refresh after login from webview
+			if (_provider) {
+				await vscode.commands.executeCommand("vs-leet.refreshStatus");
+			}
 			break;
 
 		case "checkSession": {
@@ -96,7 +105,7 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 
 		case "getAllProblems": {
 			try {
-				logDebug(`Fetching all problems`);
+				logger.debug(`Fetching all problems`);
 				let cookies = context.globalState.get("leetcode_cookies");
 				const data = await new ProblemListQuery({ cookies }).run();
 				const problems = data?.problemsetQuestionList?.questions || [];
@@ -105,10 +114,10 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 					new Problem(element).addToAll();
 				});
 
-				logDebug(`Found ${problems.length} problems`);
+				logger.debug(`Found ${problems.length} problems`);
 				panelInstance?.webview.postMessage({ command: "allProblems", data: problems });
 			} catch (err) {
-				logError(`Failed to fetch problems: ${err.message}`);
+				logger.error(`Failed to fetch problems: ${err.message}`);
 				panelInstance?.webview.postMessage({ command: "allProblemsError", error: String(err) });
 			}
 			break;
@@ -118,7 +127,12 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 			const { slug } = message;
 			try {
 				const details = await getProblemDetailsJson(context, slug);
-				panelInstance?.webview.postMessage({ command: "problemDetails", data: details });
+				const defaultLanguage = vscode.workspace.getConfiguration("vs-leet").get("defaultLanguage");
+				panelInstance?.webview.postMessage({
+					command: "problemDetails",
+					data: details,
+					defaultLanguage: defaultLanguage,
+				});
 			} catch (err) {
 				panelInstance?.webview.postMessage({ command: "problemDetailsError", error: String(err) });
 			}
@@ -132,7 +146,7 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 		}
 
 		case "logout":
-			await vscode.commands.executeCommand("leet.logout", context);
+			await vscode.commands.executeCommand("vs-leet.signOut", context);
 			break;
 
 		case "saveState":
@@ -154,9 +168,9 @@ export function closeWebview() {
 
 export function notifySession(loggedIn) {
 	if (panel) {
-		panel.webview.postMessage({ 
-			command: "session", 
-			cookiesExist: loggedIn 
+		panel.webview.postMessage({
+			command: "session",
+			cookiesExist: loggedIn,
 		});
 	}
 }
@@ -166,7 +180,7 @@ export async function openProblemFromExtension(context, titleSlug) {
 		createOrShowWebview(context);
 		await openProblemFromSlug(context, titleSlug, panel);
 	} catch (err) {
-		logError(`Failed to open problem: ${err.message}`);
+		logger.error(`Failed to open problem: ${err.message}`);
 		vscode.window.showErrorMessage(`Failed to open problem: ${err.message}`);
 	}
 }

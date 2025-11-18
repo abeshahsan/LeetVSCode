@@ -10,9 +10,21 @@ export async function openOrCreateSolutionFile(context, { slug, langSlug, code }
 	}
 	
 	const ext = langToExtentionMap[langSlug] || "txt";
-	// Use workspace folder if available, otherwise use extension path
-	const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || context.extensionPath;
-	const solutionsDir = path.join(workspaceRoot, "Solutions");
+	
+	// Get settings
+	const config = vscode.workspace.getConfiguration("vs-leet");
+	const customWorkspace = config.get("workspaceFolder");
+	const solutionFolder = config.get("solutionFolder") || "Solutions";
+	
+	// Use custom workspace if set, otherwise use workspace root
+	let workspaceRoot;
+	if (customWorkspace && customWorkspace.trim()) {
+		workspaceRoot = customWorkspace;
+	} else {
+		workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || context.extensionPath;
+	}
+	
+	const solutionsDir = path.join(workspaceRoot, solutionFolder);
 	
 	try {
 		fs.mkdirSync(solutionsDir, { recursive: true });

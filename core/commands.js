@@ -1,50 +1,64 @@
 import * as vscode from "vscode";
 import { openProblemFromExtension } from "./webview-manager.js";
 import { refreshAuthUI, signIn, signOut } from "./auth-context.js";
+import { openSettingsView } from "./settings-view.js";
+import { leetcodeOutputChannel } from "../output-logger.js";
 
 export function registerCommands(context, provider) {
 	// Problem open + refresh + filters
 	context.subscriptions.push(
-		vscode.commands.registerCommand("leet.openProblem", async (slug) => {
+		vscode.commands.registerCommand("vs-leet.openProblem", async (slug) => {
 			if (slug) await openProblemFromExtension(context, slug);
 		}),
-		vscode.commands.registerCommand("leet.refresh", async () => {
-			vscode.window.showInformationMessage("🔄 Refreshing problems...");
+		vscode.commands.registerCommand("vs-leet.refresh", async () => {
+			vscode.window.showInformationMessage("Refreshing problems...");
 			await provider.forceRefresh();
 		}),
-		vscode.commands.registerCommand("leet.clearFilter", () => {
+		vscode.commands.registerCommand("vs-leet.clearFilter", () => {
 			provider.clearFilters();
-			vscode.window.showInformationMessage("🧹 Filters cleared");
+			vscode.window.showInformationMessage("Filters cleared");
 		}),
-		vscode.commands.registerCommand("leet.search", async () => {
+		vscode.commands.registerCommand("vs-leet.search", async () => {
 			const term = await vscode.window.showInputBox({
-				prompt: "Search problems by ID or title",
-				placeHolder: "e.g. 1, Two Sum",
+				prompt: "Search problems by ID, title, or slug",
+				placeHolder: "e.g. 1. Two Sum",
 				value: provider._searchTerm || "",
 			});
 			if (term !== undefined) provider.setSearch(term.trim() || null);
 		}),
-		vscode.commands.registerCommand("leet.toggleEasy", () => provider.toggleFilter("Easy")),
-		vscode.commands.registerCommand("leet.toggleMedium", () => provider.toggleFilter("Medium")),
-		vscode.commands.registerCommand("leet.toggleHard", () => provider.toggleFilter("Hard")),
-		vscode.commands.registerCommand("leet.addTag", async () => addTagLoop(provider)),
-		vscode.commands.registerCommand("leet.removeTag", (tag) => provider.toggleTagFilter(tag))
+		vscode.commands.registerCommand("vs-leet.toggleEasy", () => provider.toggleFilter("Easy")),
+		vscode.commands.registerCommand("vs-leet.toggleMedium", () => provider.toggleFilter("Medium")),
+		vscode.commands.registerCommand("vs-leet.toggleHard", () => provider.toggleFilter("Hard")),
+		vscode.commands.registerCommand("vs-leet.addTag", async () => addTagLoop(provider)),
+		vscode.commands.registerCommand("vs-leet.removeTag", (tag) => provider.toggleTagFilter(tag)),
+
+		vscode.commands.registerCommand("vs-leet.lol", async () => {
+			console.log("LOL");
+		})
 	);
 
 	// Auth
 	context.subscriptions.push(
-		vscode.commands.registerCommand("leet.signIn", async () => {
+		vscode.commands.registerCommand("vs-leet.signIn", async () => {
 			try {
-				await signIn(context);
+				await signIn(context, provider);
 			} catch (e) {
 				vscode.window.showErrorMessage(`Login failed: ${e.message}`);
 			}
 		}),
-		vscode.commands.registerCommand("leet.signOut", async () => {
+		vscode.commands.registerCommand("vs-leet.signOut", async () => {
 			await signOut(context, provider);
 		}),
-		vscode.commands.registerCommand("leet.refreshStatus", async () => {
+		vscode.commands.registerCommand("vs-leet.refreshStatus", async () => {
+			leetcodeOutputChannel.appendLine("Refreshing authentication status...");
 			await refreshAuthUI(context, provider);
+		})
+	);
+
+	// Settings
+	context.subscriptions.push(
+		vscode.commands.registerCommand("vs-leet.openSettings", () => {
+			openSettingsView(context);
 		})
 	);
 }

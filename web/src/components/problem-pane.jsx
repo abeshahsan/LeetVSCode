@@ -31,7 +31,7 @@ function ProblemPane({ problem }) {
 	};
 
 	const handleSubmit = () => {
-		const selected = window.__SELECTED_LANG__ || "cpp";
+		const selected = window.__SELECTED_LANG__ || data?.defaultLanguage || "cpp";
 		setSubmissionLoading(true);
 		setSubmissionResult(null);
 

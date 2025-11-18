@@ -1,22 +1,22 @@
 import path from "path";
 import * as vscode from "vscode";
 import { chromium } from "playwright";
-import { logError } from "../output-logger.js";
+import { leetcodeOutputChannel, logError } from "../output-logger.js";
+import logger from "./logger.js";
 
-export async function runLoginProcess(panel, context) {
+export async function runLoginProcess(panel, context, provider) {
 	try {
 		const result = await runPlaywrightLogin(context);
-		context.globalState.update("leetcode_cookies", result.cookies);
-		context.globalState.update("leetcode_user", result.user);
-		panel?.webview.postMessage({
-			command: "session",
-			cookiesExist: !!result.cookies,
-		});
-		// Notify the extension to refresh UI (status bar) after login
-		try {
-			await vscode.commands.executeCommand("leet.refreshStatus");
-		} catch (e) {
-			// ignore if command not registered
+		await context.globalState.update("leetcode_cookies", result.cookies);
+		await context.globalState.update("leetcode_user", result.user);
+		
+		// Refresh UI after successful login
+		if (provider) {
+			try {
+				await vscode.commands.executeCommand("vs-leet.refreshStatus");
+			} catch (e) {
+				leetcodeOutputChannel.appendLine(`Error refreshing auth UI: ${e.message}`);
+			}
 		}
 	} catch (err) {
 		panel?.webview.postMessage({
@@ -30,9 +30,10 @@ export async function runLoginProcess(panel, context) {
 export async function runPlaywrightLogin(context) {
 	const userDataDir = path.join(context.globalStorageUri.fsPath, "chrome-profile");
 
+	logger.info("userDataDir: " + userDataDir);
+
 	let browserContext;
 	let page;
-	let user = null;
 
 	try {
 		browserContext = await chromium.launchPersistentContext(userDataDir, {
@@ -40,53 +41,80 @@ export async function runPlaywrightLogin(context) {
 			args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
 		});
 
+		await browserContext.clearCookies();
+
+		logger.info("Cleared old cookies. Starting login flow...");
+		logger.debug("Navigating to LeetCode login page...");
+
 		page = await browserContext.newPage();
 		await page.goto("https://leetcode.com/accounts/login/", { waitUntil: "domcontentloaded" });
 
-		let loginDetected = false;
-		page.on("response", async (response) => {
-			try {
-				const url = response.url();
-				if (url.includes("/graphql/") && response.status() === 200) {
-					const json = await response.json().catch(() => null);
-					if (json?.data?.currentUser?.username) {
-						user = json.data.currentUser;
-						loginDetected = true;
-					}
-				}
-			} catch (err) {
-				logError(`Login response error: ${err.message}`);
-			}
-		});
+		const cookies = await waitForLogin(browserContext);
+		logger.debug("Cookies: " + cookies);
 
-		const cookies = await waitForLogin(browserContext, page);
-		const sessionCookie = cookies?.find((c) => c.name === "LEETCODE_SESSION" && c.value);
-		if (!loginDetected && !sessionCookie) {
+		if (!cookies) {
 			throw new Error("Login not detected (timeout). Please keep the browser open and complete the login.");
 		}
 
-		const finalCookies = cookies || (await browserContext.cookies());
-		vscode.window.showInformationMessage(`✅ Logged in`);
+		// Fetch user info
+		let user = await fetchLoggedInUser(cookies);
 
-		return { user, cookies: finalCookies };
+		if (!user || !user.username) {
+			logger.error("Failed to fetch logged-in user info.");
+			user = undefined;
+		} else {
+			logger.info(`User info: ${JSON.stringify(user)}`);
+		}
+
+		vscode.window.showInformationMessage(user ? `✅ Logged in as ${user.username}` : `✅ Logged in`);
+
+		return { user, cookies };
 	} finally {
 		await closeResources(page, browserContext);
 	}
 }
 
-async function waitForLogin(ctx, page, { timeoutMs = 180000, pollMs = 1000 } = {}) {
+async function waitForLogin(browserContext, { timeoutMs = 180000 } = {}) {
 	const start = Date.now();
 	while (Date.now() - start < timeoutMs) {
-		const all = await ctx.cookies();
-		const sess = all.find((c) => c.name === "LEETCODE_SESSION" && c.value);
-		const csrf = all.find((c) => c.name === "csrftoken" && c.value);
-		const url = page.url();
-		if (sess || csrf || !url.includes("/accounts/login")) {
-			return all;
+		const leetCodeCookie = await browserContext.cookies("https://leetcode.com");
+		const hasLeetCodeSession = leetCodeCookie.some((c) => c.name === "LEETCODE_SESSION" && c.value);
+
+		// Only return if we have a valid session cookie
+		if (hasLeetCodeSession) {
+			const cookieHeader = leetCodeCookie.map((c) => `${c.name}=${c.value}`).join("; ");
+			const csrftoken = leetCodeCookie.find((c) => c.name === "csrftoken")?.value;
+			return {cookie: cookieHeader, csrftoken  };
 		}
-		await new Promise((r) => setTimeout(r, pollMs));
 	}
 	return null;
+}
+
+async function fetchLoggedInUser(cookieHeader) {
+	const query = `
+		query globalData {
+		  userStatus {
+			username
+			realName
+			avatar
+			isPremium
+		  }
+		}
+	  `;
+
+	const response = await fetch("https://leetcode.com/graphql", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Cookie: cookieHeader,
+		},
+		body: JSON.stringify({ query }),
+	});
+	const data = await response.json();
+
+	logger.debug(data);
+
+	return data.data.userStatus;
 }
 
 async function closeResources(page, browserContext) {

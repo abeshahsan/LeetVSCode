@@ -41,7 +41,7 @@ export default function TestRunnerPane({ problem, onSubmit, isSubmitting = false
   async function runRemote() {
     if (testcases.length === 0) return;
     const formattedInput = testcases.map((testCase) => testCase.join("\n")).join("\n");
-    const selected = window.__SELECTED_LANG__ || "cpp";
+    const selected = window.__SELECTED_LANG__ || data?.defaultLanguage || "cpp";
     setRemoteRunning(true);
     setRemoteResults(null);
     window.vscode.postMessage({

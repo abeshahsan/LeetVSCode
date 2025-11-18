@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { ProblemListQuery } from "./services/leetcode-queries.js";
-import { logDebug } from "../output-logger.js";
+import logger from "./logger.js";
 
 export class LeetViewProvider {
 	constructor(context) {
@@ -15,7 +15,7 @@ export class LeetViewProvider {
 		this._tagFilters = [];
 	}
 
-	refresh() {
+	async refresh() {
 		this._onDidChangeTreeData.fire();
 	}
 
@@ -23,6 +23,7 @@ export class LeetViewProvider {
 		this._problems = [];
 		this._loading = false;
 		this.refresh();
+		logger.debug("Forcing problem list refresh...");
 	}
 
 	toggleFilter(level) {
@@ -61,7 +62,7 @@ export class LeetViewProvider {
 
 	async getChildren(element) {
 		const cookies = this.context.globalState.get("leetcode_cookies");
-		const loggedIn = Array.isArray(cookies) && cookies.length > 0;
+		const loggedIn = !!cookies;
 
 		if (!element) return this._getRootItems(loggedIn);
 		if (element.label === "Filters") return this._getFilterItems();
@@ -95,12 +96,10 @@ export class LeetViewProvider {
 	}
 
 	_createWelcomeItem() {
-		const welcome = new vscode.TreeItem(
-			"Please sign in using the button above",
-			vscode.TreeItemCollapsibleState.None
-		);
+		const welcome = new vscode.TreeItem("Sign In", vscode.TreeItemCollapsibleState.None);
 		welcome.iconPath = new vscode.ThemeIcon("info");
-		welcome.description = "";
+		welcome.description = "Sign in to LeetCode to view problems.";
+		welcome.command = { command: "vs-leet.signIn", title: "Sign In" };
 		return welcome;
 	}
 
@@ -120,7 +119,7 @@ export class LeetViewProvider {
 			this._searchTerm ? `Search: "${this._searchTerm}"` : "Search Problems",
 			vscode.TreeItemCollapsibleState.None
 		);
-		searchItem.command = { command: "leet.search", title: "Search" };
+		searchItem.command = { command: "vs-leet.search", title: "Search" };
 		searchItem.iconPath = new vscode.ThemeIcon("search");
 		searchItem.description = this._searchTerm ? "Click to modify" : "";
 		return searchItem;
@@ -138,7 +137,7 @@ export class LeetViewProvider {
 					level === "Easy" ? "charts.green" : level === "Medium" ? "charts.yellow" : "charts.red"
 				)
 			);
-			item.command = { command: `leet.toggle${level}`, title: `Toggle ${level}` };
+			item.command = { command: `vs-leet.toggle${level}`, title: `Toggle ${level}` };
 			item.description = active ? "✓" : "";
 			items.push(item);
 		}
@@ -150,7 +149,7 @@ export class LeetViewProvider {
 		for (const tag of this._tagFilters) {
 			const tagItem = new vscode.TreeItem(`#${tag}`, vscode.TreeItemCollapsibleState.None);
 			tagItem.iconPath = new vscode.ThemeIcon("tag", new vscode.ThemeColor("charts.blue"));
-			tagItem.command = { command: "leet.removeTag", title: "Remove Tag", arguments: [tag] };
+			tagItem.command = { command: "vs-leet.removeTag", title: "Remove Tag", arguments: [tag] };
 			tagItem.description = "✓ Click to remove";
 			items.push(tagItem);
 		}
@@ -160,7 +159,7 @@ export class LeetViewProvider {
 	_buildAddTagItem() {
 		const addTagItem = new vscode.TreeItem("+ Add Tag Filter", vscode.TreeItemCollapsibleState.None);
 		addTagItem.iconPath = new vscode.ThemeIcon("add");
-		addTagItem.command = { command: "leet.addTag", title: "Add Tag Filter" };
+		addTagItem.command = { command: "vs-leet.addTag", title: "Add Tag Filter" };
 		addTagItem.description = "Select tags";
 		return addTagItem;
 	}
@@ -215,7 +214,7 @@ export class LeetViewProvider {
 		);
 
 		item.description = `   ${q?.status === "ac" ? "✅ Solved" : q?.status === "notac" ? "⚠️ Attempted" : ""}`;
-		item.command = { command: "leet.openProblem", title: "Open Problem", arguments: [q.titleSlug] };
+		item.command = { command: "vs-leet.openProblem", title: "Open Problem", arguments: [q.titleSlug] };
 		return item;
 	}
 

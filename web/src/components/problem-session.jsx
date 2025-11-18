@@ -4,17 +4,29 @@ import ProblemPane from "./problem-pane";
 
 export default function ProblemSession({ data, onBack }) {
 	const problem = data?.question;
+	const defaultLanguage = data?.defaultLanguage; // From VS Code settings
 	const codeSnippets = useMemo(() => problem?.codeSnippets || [], [problem?.codeSnippets]);
+	
 	const defaultLang = useMemo(() => {
-		// Prefer javascript, then python3, else first
-		const pref = ["c++", "javascript", "python3", "typescript", "java"];
-		for (const p of pref) {
-			const found = codeSnippets.find((c) => c.langSlug === p);
-			if (found) return found.langSlug;
+		// Use VS Code settings default language if available
+		if (defaultLanguage) {
+			const found = codeSnippets.find((c) => c.langSlug === defaultLanguage);
+			if (found) {
+				return defaultLanguage;
+			}
 		}
+		// Fallback: just use first available
 		return codeSnippets[0]?.langSlug;
-	}, [codeSnippets]);
+	}, [codeSnippets, defaultLanguage]);
+	
 	const [langSlug, setLangSlug] = useState(defaultLang);
+	
+	// Update langSlug when defaultLang changes
+	useEffect(() => {
+		if (defaultLang) {
+			setLangSlug(defaultLang);
+		}
+	}, [defaultLang]);
 
 	// Open or create the solution file in VS Code (column two) for the current language
 	function openSolutionFile(currentLang) {

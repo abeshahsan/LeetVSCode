@@ -1,10 +1,9 @@
-
 export class BaseLeetQuery {
 	constructor(options = {}) {
 		this.endpoint = "https://leetcode.com/graphql";
-		this.cookies = options.cookies || [];
-		this.cookieStr = this.cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-		this.csrftoken = this.cookies.find((c) => c.name === "csrftoken")?.value || "";
+
+		this.cookieStr = options.cookies || "";
+		this.csrftoken = options.csrftoken || "";
 	}
 
 	baseHeaders() {
@@ -135,6 +134,7 @@ export const langToExtentionMap = {
 	cpp: "cpp",
 	c: "c",
 	csharp: "cs",
+	golang: "go",
 	go: "go",
 	rust: "rs",
 	kotlin: "kt",
@@ -143,6 +143,9 @@ export const langToExtentionMap = {
 	scala: "scala",
 	php: "php",
 	dart: "dart",
+	racket: "rkt",
+	erlang: "erl",
+	elixir: "ex",
 	typescriptreact: "tsx",
 	javascriptreact: "jsx",
 };

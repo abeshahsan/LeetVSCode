@@ -58,14 +58,14 @@ export async function runRemote(panel, context, { slug, langSlug, input }) {
 	}
 	
 	try {
-		leetcodeOutputChannel.appendLine(`[run-remote] Starting with slug=${slug}, lang=${langSlug}`);
+		logDebug(`[run-remote] Starting with slug=${slug}, lang=${langSlug}`);
 		const { cookies, cookieStr, csrftoken } = getCookieContext(context);
 		
 		if (!cookies || cookies.length === 0) {
 			throw new Error("Not logged in. Please sign in first.");
 		}
 		
-		leetcodeOutputChannel.appendLine(`[run-remote] Found ${cookies.length} cookies`);
+		logDebug(`[run-remote] Found ${cookies.length} cookies`);
 
 		const questionId = await _getQuestionIdSafe(cookies, slug);
 		const typed_code = await loadTypedCode(context, slug).catch(() => "");
@@ -78,16 +78,16 @@ export async function runRemote(panel, context, { slug, langSlug, input }) {
 		};
 
 		const url = `https://leetcode.com/problems/${slug}/interpret_solution/`;
-		leetcodeOutputChannel.appendLine(`[run-remote] POST ${url}`);
-		leetcodeOutputChannel.appendLine(`[run-remote] Payload: ${JSON.stringify(payload, null, 2)}`);
+		logDebug(`[run-remote] POST ${url}`);
+		logDebug(`[run-remote] Payload: ${JSON.stringify(payload, null, 2)}`);
 
 		const {
 			obj: postObj,
 			text: postText,
 			status: postStatus,
 		} = await _postJson(url, payload, cookieStr, csrftoken, `https://leetcode.com/problems/${slug}/`);
-		leetcodeOutputChannel.appendLine(`[run-remote] POST status: ${postStatus}`);
-		leetcodeOutputChannel.appendLine(`[run-remote] POST response: ${postText}`);
+		logDebug(`[run-remote] POST status: ${postStatus}`);
+		logDebug(`[run-remote] POST response: ${postText}`);
 
 		const interpretId = postObj?.interpret_id || postObj?.interpretation_id;
 		if (!interpretId) {
@@ -96,7 +96,7 @@ export async function runRemote(panel, context, { slug, langSlug, input }) {
 		}
 
 		const checkUrl = `https://leetcode.com/submissions/detail/${interpretId}/check/`;
-		leetcodeOutputChannel.appendLine(`[run-remote] Polling check URL: ${checkUrl}`);
+		logDebug(`[run-remote] Polling check URL: ${checkUrl}`);
 
 		const final = await _pollCheck(
 			checkUrl,
@@ -111,28 +111,28 @@ export async function runRemote(panel, context, { slug, langSlug, input }) {
 		);
 
 		if (final) {
-			leetcodeOutputChannel.appendLine(`[run-remote] Final response JSON: ${JSON.stringify(final, null, 2)}`);
+			logDebug(`[run-remote] Final response JSON: ${JSON.stringify(final, null, 2)}`);
 		} else {
-			leetcodeOutputChannel.appendLine(`[run-remote] No final response - timeout occurred`);
+			logDebug(`[run-remote] No final response - timeout occurred`);
 		}
 
 		panel?.webview.postMessage({ command: "runResponse", data: final || { error: "Timeout" } });
 	} catch (err) {
-		leetcodeOutputChannel.appendLine(`[run-remote] Error: ${err.message}`);
+		logDebug(`[run-remote] Error: ${err.message}`);
 		panel?.webview.postMessage({ command: "runError", error: String(err) });
 	}
 }
 
 export async function submitSolution(panel, context, { slug, langSlug }) {
 	try {
-		leetcodeOutputChannel.appendLine(`[submit-code] Starting with slug=${slug}, lang=${langSlug}`);
+		logDebug(`[submit-code] Starting with slug=${slug}, lang=${langSlug}`);
 		const { cookies, cookieStr, csrftoken } = getCookieContext(context);
-		leetcodeOutputChannel.appendLine(`[submit-code] Found ${cookies.length} cookies`);
+		logDebug(`[submit-code] Found ${cookies.length} cookies`);
 
 		const questionId = await _getQuestionIdSafe(cookies, slug);
 		if (!questionId) throw new Error("Could not get question ID");
 
-		leetcodeOutputChannel.appendLine(`[submit-code] Question ID: ${questionId}`);
+		logDebug(`[submit-code] Question ID: ${questionId}`);
 
 		const typed_code = await loadTypedCode(context, slug);
 		if (!typed_code) throw new Error("No solution file found");
@@ -141,27 +141,27 @@ export async function submitSolution(panel, context, { slug, langSlug }) {
 		const payload = { lang: langToUse, question_id: questionId, typed_code };
 
 		const url = `https://leetcode.com/problems/${slug}/submit/`;
-		leetcodeOutputChannel.appendLine(`[submit-code] POST ${url}`);
-		leetcodeOutputChannel.appendLine(`[submit-code] Payload: ${JSON.stringify(payload, null, 2)}`);
+		logDebug(`[submit-code] POST ${url}`);
+		logDebug(`[submit-code] Payload: ${JSON.stringify(payload, null, 2)}`);
 
 		const {
 			obj: postObj,
 			text: postText,
 			status: postStatus,
 		} = await _postJson(url, payload, cookieStr, csrftoken, `https://leetcode.com/problems/${slug}/`);
-		leetcodeOutputChannel.appendLine(`[submit-code] POST status: ${postStatus}`);
-		leetcodeOutputChannel.appendLine(`[submit-code] POST response: ${postText}`);
+		logDebug(`[submit-code] POST status: ${postStatus}`);
+		logDebug(`[submit-code] POST response: ${postText}`);
 
 		const submissionId = postObj?.submission_id;
 		if (!submissionId) {
-			leetcodeOutputChannel.appendLine(`[submit-code] No submission_id returned`);
+			logDebug(`[submit-code] No submission_id returned`);
 			panel?.webview.postMessage({ command: "submitError", error: "No submission_id returned" });
 			return;
 		}
 
-		leetcodeOutputChannel.appendLine(`[submit-code] Submission ID: ${submissionId}`);
+		logDebug(`[submit-code] Submission ID: ${submissionId}`);
 		const checkUrl = `https://leetcode.com/submissions/detail/${submissionId}/check/`;
-		leetcodeOutputChannel.appendLine(`[submit-code] Polling check URL: ${checkUrl}`);
+		logDebug(`[submit-code] Polling check URL: ${checkUrl}`);
 
 		const final = await _pollCheck(
 			checkUrl,
@@ -174,10 +174,10 @@ export async function submitSolution(panel, context, { slug, langSlug }) {
 			}
 		);
 
-		leetcodeOutputChannel.appendLine(`[submit-code] Final result: ${JSON.stringify(final, null, 2)}`);
+		logDebug(`[submit-code] Final result: ${JSON.stringify(final, null, 2)}`);
 		panel?.webview.postMessage({ command: "submitResponse", data: final || { error: "Timeout" } });
 	} catch (err) {
-		leetcodeOutputChannel.appendLine(`[submit-code] Error: ${err.message}`);
+		logDebug(`[submit-code] Error: ${err.message}`);
 		panel?.webview.postMessage({ command: "submitError", error: String(err) });
 	}
 }
@@ -188,7 +188,7 @@ async function _getQuestionIdSafe(cookies, slug) {
 		const details = ProblemDetails.fromGraphQL(raw);
 		return details?.questionId || null;
 	} catch (e) {
-		leetcodeOutputChannel.appendLine(`[helper] Failed to get question details: ${e.message}`);
+		logError(`[helper] Failed to get question details: ${e.message}`);
 		return null;
 	}
 }

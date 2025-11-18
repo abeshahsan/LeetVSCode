@@ -42,151 +42,169 @@
 	"contributes": {
 		"commands": [
 			{
-				"command": "webview.leetcode",
-				"title": "LeetCode: Open Problem Browser",
-				"category": "LeetCode",
+				"command": "vs-leet.openBrowser",
+				"title": "Open Problem Browser",
+				"category": "VS-Leet",
 				"icon": "$(home)"
 			},
 			{
-				"command": "leet.signIn",
-				"title": "Sign In to LeetCode",
-				"category": "LeetCode",
+				"command": "vs-leet.signIn",
+				"title": "Sign In",
+				"category": "VS-Leet",
 				"icon": "$(account)"
 			},
 			{
-				"command": "leet.signOut",
-				"title": "Sign Out from LeetCode",
-				"category": "LeetCode",
+				"command": "vs-leet.signOut",
+				"title": "Sign Out",
+				"category": "VS-Leet",
 				"icon": "$(sign-out)"
 			},
 			{
-				"command": "leet.openProblem",
+				"command": "vs-leet.openProblem",
 				"title": "Open Problem",
-				"category": "LeetCode"
+				"category": "VS-Leet"
 			},
 			{
-				"command": "leet.filterEasy",
+				"command": "vs-leet.filterEasy",
 				"title": "Filter Easy Problems",
+				"category": "VS-Leet",
 				"icon": "$(check-circle)"
 			},
 			{
-				"command": "leet.filterMedium",
+				"command": "vs-leet.filterMedium",
 				"title": "Filter Medium Problems",
+				"category": "VS-Leet",
 				"icon": "$(circle-large-outline)"
 			},
 			{
-				"command": "leet.filterHard",
+				"command": "vs-leet.filterHard",
 				"title": "Filter Hard Problems",
+				"category": "VS-Leet",
 				"icon": "$(flame)"
 			},
 			{
-				"command": "leet.clearFilter",
+				"command": "vs-leet.clearFilter",
 				"title": "Clear Filters",
+				"category": "VS-Leet",
 				"icon": "$(clear-all)"
 			},
 			{
-				"command": "leet.search",
+				"command": "vs-leet.search",
 				"title": "Search Problems",
+				"category": "VS-Leet",
 				"icon": "$(search)"
 			},
 			{
-				"command": "leet.filterByTag",
+				"command": "vs-leet.filterByTag",
 				"title": "Filter by Tag",
+				"category": "VS-Leet",
 				"icon": "$(tag)"
 			},
 			{
-				"command": "leet.addTag",
+				"command": "vs-leet.addTag",
 				"title": "Add Tag Filter",
+				"category": "VS-Leet",
 				"icon": "$(tag)"
 			},
 			{
-				"command": "leet.removeTag",
+				"command": "vs-leet.removeTag",
 				"title": "Remove Tag Filter",
+				"category": "VS-Leet",
 				"icon": "$(circle-slash)"
 			},
 			{
-				"command": "leet.refresh",
+				"command": "vs-leet.refresh",
 				"title": "Refresh Problems",
+				"category": "VS-Leet",
 				"icon": "$(refresh)"
+			},
+			{
+				"command": "vs-leet.openSettings",
+				"title": "Open Settings",
+				"category": "VS-Leet",
+				"icon": "$(settings-gear)"
 			}
 		],
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "leet",
-					"title": "LeetCode",
+					"id": "vs-leet",
+					"title": "VS-Leet",
 					"icon": "resources/icon.svg"
 				}
 			]
 		},
 		"views": {
-			"leet": [
+			"vs-leet": [
 				{
-					"id": "leetView",
-					"name": "LeetCode",
+					"id": "vs-leet.problemsView",
+					"name": "Problems",
 					"icon": "resources/icon.svg"
 				}
 			]
 		},
-		"viewsWelcome": [
-			
-		],
+		"viewsWelcome": [],
 		"menus": {
 			"view/title": [
 				{
-					"command": "leet.signIn",
-					"when": "view == leetView && !leetcode.loggedIn",
+					"command": "vs-leet.signIn",
+					"when": "view == vs-leet.problemsView && !vs-leet.loggedIn",
 					"group": "navigation@1"
 				},
 				{
-					"command": "leet.signOut",
-					"when": "view == leetView && leetcode.loggedIn",
+					"command": "vs-leet.signOut",
+					"when": "view == vs-leet.problemsView && vs-leet.loggedIn",
 					"group": "navigation@1"
 				},
 				{
-					"command": "leet.refresh",
-					"when": "view == leetView && leetcode.loggedIn",
+					"command": "vs-leet.refresh",
+					"when": "view == vs-leet.problemsView && vs-leet.loggedIn",
 					"group": "navigation@2"
 				},
 				{
-					"command": "leet.clearFilter",
-					"when": "view == leetView && viewItem == filtersRoot",
+					"command": "vs-leet.openSettings",
+					"when": "view == vs-leet.problemsView && vs-leet.loggedIn",
 					"group": "navigation@3"
+				},
+				{
+					"command": "vs-leet.clearFilter",
+					"when": "view == vs-leet.problemsView && viewItem == filtersRoot",
+					"group": "navigation@4"
 				}
 			],
 			"view/item/context": [
 				{
-					"command": "leet.removeTag",
-					"when": "view == leetView && viewItem == tagItem",
+					"command": "vs-leet.removeTag",
+					"when": "view == vs-leet.problemsView && viewItem == tagItem",
 					"group": "inline"
 				}
 			]
 		},
 		"customEditors": [
 			{
-				"viewType": "leetcode.problemView",
-				"displayName": "LeetCode Problem Viewer",
+				"viewType": "vs-leet.problemView",
+				"displayName": "VS-Leet Problem Viewer",
 				"selector": [
 					{
-						"filenamePattern": "*.leetcode-problem"
+						"filenamePattern": "*.vs-leet-problem"
 					}
 				]
 			},
 			{
-				"viewType": "leetcode.problemList",
-				"displayName": "LeetCode Problems List",
+				"viewType": "vs-leet.problemList",
+				"displayName": "VS-Leet Problems List",
 				"selector": [
 					{
-						"filenamePattern": "*.leetcode-list"
+						"filenamePattern": "*.vs-leet-list"
 					}
 				]
 			},
 			{
-				"viewType": "leetcode.problemSession",
-				"displayName": "LeetCode Problem Session",
+				"viewType": "vs-leet.problemSession",
+				"displayName": "VS-Leet Problem Session",
 				"selector": [
 					{
-						"filenamePattern": "*.leetcode-session"
+						"filenamePattern": "*.vs-leet-session"
 					}
 				]
 			}
@@ -208,8 +226,59 @@
 				"vs-leet.defaultLanguage": {
 					"type": "string",
 					"default": "cpp",
-					"enum": ["cpp", "java", "python3", "javascript", "typescript"],
+					"enum": [
+						"cpp",
+						"java",
+						"python",
+						"python3",
+						"c",
+						"csharp",
+						"javascript",
+						"typescript",
+						"php",
+						"swift",
+						"kotlin",
+						"dart",
+						"golang",
+						"ruby",
+						"scala",
+						"rust",
+						"racket",
+						"erlang",
+						"elixir"
+					],
+					"enumDescriptions": [
+						"C++",
+						"Java",
+						"Python",
+						"Python 3",
+						"C",
+						"C#",
+						"JavaScript",
+						"TypeScript",
+						"PHP",
+						"Swift",
+						"Kotlin",
+						"Dart",
+						"Go",
+						"Ruby",
+						"Scala",
+						"Rust",
+						"Racket",
+						"Erlang",
+						"Elixir"
+					],
 					"description": "Default programming language for solutions"
+				},
+				"vs-leet.showTopicTags": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show topic tags in problem descriptions"
+				},
+				"vs-leet.workspaceFolder": {
+					"type": "string",
+					"default": "",
+					"description": "Custom workspace folder path for solutions"
 				}
 			}
 		}
@@ -235,7 +304,9 @@
 		"tailwindcss": "^3.4.18"
 	},
 	"dependencies": {
+		"dotenv": "^17.2.3",
 		"node-fetch": "^3.3.2",
-		"playwright": "^1.56.0"
+		"playwright": "^1.56.0",
+		"winston": "^3.18.3"
 	}
 }

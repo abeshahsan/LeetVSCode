@@ -8,7 +8,11 @@ function App() {
 		const handler = (event) => {
 			const msg = event.detail || event.data;
 			if (msg.command === "problemDetails") {
-				setSessionData(msg.data);
+				// Include defaultLanguage in session data
+				setSessionData({
+					...msg.data,
+					defaultLanguage: msg.defaultLanguage
+				});
 			}
 		};
 		window.addEventListener("vscode-message", handler);
