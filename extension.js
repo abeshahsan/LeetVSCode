@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { LeetViewProvider } from "./core/leet-view-provider.js";
 import { registerCommands } from "./core/commands.js";
-import { refreshAuthUI } from "./core/auth-context.js";
+import { refreshSidebar } from "./core/auth-context.js";
 import { setProvider } from "./core/webview-manager.js";
 
 export async function activate(context) {
@@ -14,7 +14,7 @@ export async function activate(context) {
 
 		registerCommands(context, provider);
 
-		await refreshAuthUI(context, provider);
+		await refreshSidebar(context, provider);
 	} catch (error) {
 		// logError(`Activation failed: ${error.message}`);
 		vscode.window.showErrorMessage(`Failed to activate VS-Leet: ${error.message}`);

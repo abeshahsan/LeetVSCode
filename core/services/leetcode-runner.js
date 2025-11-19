@@ -8,10 +8,9 @@ import { readJsonOrText } from "../utils/http.js";
 import { stripEditorSupport } from "../utils/editor-support.js";
 
 function getCookieContext(context) {
-	const cookies = context.globalState.get("leetcode_cookies") || [];
-	const cookieStr = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-	const csrftoken = cookies.find((c) => c.name === "csrftoken")?.value || "";
-	return { cookies, cookieStr, csrftoken };
+	const cookieStr = context.globalState.get("leetcode_cookies") || "";
+	const csrftoken = context.globalState.get("leetcode_csrftoken") || "";
+	return { cookieStr, csrftoken };
 }
 
 function mapLang(langSlug) {
@@ -59,15 +58,14 @@ export async function runRemote(panel, context, { slug, langSlug, input }) {
 	
 	try {
 		logDebug(`[run-remote] Starting with slug=${slug}, lang=${langSlug}`);
-		const { cookies, cookieStr, csrftoken } = getCookieContext(context);
+		const { cookieStr, csrftoken } = getCookieContext(context);
 		
-		if (!cookies || cookies.length === 0) {
+		if (!cookieStr) {
 			throw new Error("Not logged in. Please sign in first.");
 		}
 		
-		logDebug(`[run-remote] Found ${cookies.length} cookies`);
 
-		const questionId = await _getQuestionIdSafe(cookies, slug);
+		const questionId = await _getQuestionIdSafe(cookieStr, slug);
 		const typed_code = await loadTypedCode(context, slug).catch(() => "");
 
 		const payload = {
@@ -126,10 +124,9 @@ export async function runRemote(panel, context, { slug, langSlug, input }) {
 export async function submitSolution(panel, context, { slug, langSlug }) {
 	try {
 		logDebug(`[submit-code] Starting with slug=${slug}, lang=${langSlug}`);
-		const { cookies, cookieStr, csrftoken } = getCookieContext(context);
-		logDebug(`[submit-code] Found ${cookies.length} cookies`);
+		const { cookieStr, csrftoken } = getCookieContext(context);
 
-		const questionId = await _getQuestionIdSafe(cookies, slug);
+		const questionId = await _getQuestionIdSafe(cookieStr, slug);
 		if (!questionId) throw new Error("Could not get question ID");
 
 		logDebug(`[submit-code] Question ID: ${questionId}`);
@@ -182,9 +179,9 @@ export async function submitSolution(panel, context, { slug, langSlug }) {
 	}
 }
 
-async function _getQuestionIdSafe(cookies, slug) {
+async function _getQuestionIdSafe(cookieStr, slug) {
 	try {
-		const raw = await new ProblemDetailsQuery({ cookies }).run(slug);
+		const raw = await new ProblemDetailsQuery({ cookies: cookieStr }).run(slug);
 		const details = ProblemDetails.fromGraphQL(raw);
 		return details?.questionId || null;
 	} catch (e) {

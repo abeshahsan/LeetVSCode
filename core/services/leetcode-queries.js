@@ -105,25 +105,7 @@ export class ProblemDetailsQuery extends BaseLeetQuery {
 }
 
 // Backward-compatible function exports using the OOP classes above
-export async function getAllProblems(options) {
-	try {
-		const client = new ProblemListQuery(options);
-		const data = await client.run(options?.params);
-		return data;
-	} catch (err) {
-		return Promise.reject(err);
-	}
-}
-
-export async function getProblemDetails(slug, options) {
-	try {
-		const client = new ProblemDetailsQuery(options);
-		const data = await client.run(slug);
-		return data;
-	} catch (err) {
-		throw err;
-	}
-}
+// Removed unused function-style exports in favor of class-based queries
 
 export const langToExtentionMap = {
 	javascript: "js",

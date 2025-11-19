@@ -11,8 +11,9 @@ export async function getProblemDetailsJson(context, slug) {
 export async function openProblemFromSlug(context, slug, panel) {
 	try {
 		const details = await getProblemDetailsJson(context, slug);
+		const defaultLanguage = vscode.workspace.getConfiguration("vs-leet").get("defaultLanguage");
+		panel?.webview.postMessage({ command: "problemDetails", data: details, defaultLanguage });
 		panel?.reveal(vscode.ViewColumn.One);
-		panel?.webview.postMessage({ command: "problemDetails", data: details });
 	} catch (err) {
 		vscode.window.showErrorMessage(`Failed to fetch problem: ${err.message || err}`);
 		throw err;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import TestRunnerPane from "./test-runner-pane";
-import { parseMetaData, parseFailedTestInput, getStatusClass, getLikePercentage } from "../utils/ui.js";
+import { parseMetaData, getStatusClass, getLikePercentage } from "../utils/ui.js";
 
 function ProblemPane({ problem }) {
 	const [activeTab, setActiveTab] = useState("description");

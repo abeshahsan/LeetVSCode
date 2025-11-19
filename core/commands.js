@@ -1,18 +1,17 @@
 import * as vscode from "vscode";
 import { openProblemFromExtension } from "./webview-manager.js";
-import { refreshAuthUI, signIn, signOut } from "./auth-context.js";
+import { refreshSidebar, signIn, signOut } from "./auth-context.js";
 import { openSettingsView } from "./settings-view.js";
 import { leetcodeOutputChannel } from "../output-logger.js";
 
 export function registerCommands(context, provider) {
-	// Problem open + refresh + filters
 	context.subscriptions.push(
 		vscode.commands.registerCommand("vs-leet.openProblem", async (slug) => {
 			if (slug) await openProblemFromExtension(context, slug);
 		}),
 		vscode.commands.registerCommand("vs-leet.refresh", async () => {
 			vscode.window.showInformationMessage("Refreshing problems...");
-			await provider.forceRefresh();
+			await provider.cleanup();
 		}),
 		vscode.commands.registerCommand("vs-leet.clearFilter", () => {
 			provider.clearFilters();
@@ -32,9 +31,6 @@ export function registerCommands(context, provider) {
 		vscode.commands.registerCommand("vs-leet.addTag", async () => addTagLoop(provider)),
 		vscode.commands.registerCommand("vs-leet.removeTag", (tag) => provider.toggleTagFilter(tag)),
 
-		vscode.commands.registerCommand("vs-leet.lol", async () => {
-			console.log("LOL");
-		})
 	);
 
 	// Auth
@@ -51,7 +47,7 @@ export function registerCommands(context, provider) {
 		}),
 		vscode.commands.registerCommand("vs-leet.refreshStatus", async () => {
 			leetcodeOutputChannel.appendLine("Refreshing authentication status...");
-			await refreshAuthUI(context, provider);
+			await refreshSidebar(context, provider);
 		})
 	);
 

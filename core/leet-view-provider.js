@@ -15,14 +15,18 @@ export class LeetViewProvider {
 		this._tagFilters = [];
 	}
 
-	async refresh() {
+	update() {
 		this._onDidChangeTreeData.fire();
 	}
 
-	async forceRefresh() {
+	refresh() {
+		this.update();
+	}
+
+	cleanup() {
 		this._problems = [];
 		this._loading = false;
-		this.refresh();
+		this.update();
 		logger.debug("Forcing problem list refresh...");
 	}
 
@@ -32,19 +36,19 @@ export class LeetViewProvider {
 		} else {
 			this._filters.push(level);
 		}
-		this.refresh();
+		this.update();
 	}
 
 	clearFilters() {
 		this._filters = [];
 		this._searchTerm = null;
 		this._tagFilters = [];
-		this.refresh();
+		this.update();
 	}
 
 	setSearch(term) {
 		this._searchTerm = term;
-		this.refresh();
+		this.update();
 	}
 
 	toggleTagFilter(tag) {
@@ -53,7 +57,7 @@ export class LeetViewProvider {
 		} else {
 			this._tagFilters.push(tag);
 		}
-		this.refresh();
+		this.update();
 	}
 
 	getTreeItem(element) {
@@ -63,6 +67,8 @@ export class LeetViewProvider {
 	async getChildren(element) {
 		const cookies = this.context.globalState.get("leetcode_cookies");
 		const loggedIn = !!cookies;
+
+		logger.debug(`Getting children for element: ${JSON.stringify(element)}`);
 
 		if (!element) return this._getRootItems(loggedIn);
 		if (element.label === "Filters") return this._getFilterItems();
@@ -252,10 +258,11 @@ export class LeetViewProvider {
 	}
 
 	_buildProblemsLabel() {
-		const parts = [];
-		if (this._filters.length > 0) parts.push(this._filters.join("+"));
-		if (this._searchTerm) parts.push(`"${this._searchTerm}"`);
-		if (this._tagFilters.length > 0) parts.push(this._tagFilters.map((t) => `#${t}`).join("+"));
-		return parts.length ? `Problems (${parts.join(" | ")})` : "Problems";
+		let problemsFiltered = false;
+		if (this._filters.length > 0 || this._searchTerm || this._tagFilters.length > 0) {
+			problemsFiltered = true;
+		}
+		
+		return problemsFiltered ? `Problems (filtered)` : "Problems";
 	}
 }

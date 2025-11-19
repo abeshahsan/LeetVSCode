@@ -88,7 +88,7 @@ class Problem {
 		};
 	}
 
-	addToAll() {
+	add() {
 		Problem.allProblems.push(this);
 	}
 }

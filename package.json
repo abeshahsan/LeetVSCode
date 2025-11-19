@@ -35,18 +35,10 @@
 		"color": "#1e1e1e",
 		"theme": "dark"
 	},
-	"activationEvents": [
-		"onStartupFinished"
-	],
+	
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
-			{
-				"command": "vs-leet.openBrowser",
-				"title": "Open Problem Browser",
-				"category": "VS-Leet",
-				"icon": "$(home)"
-			},
 			{
 				"command": "vs-leet.signIn",
 				"title": "Sign In",
@@ -60,29 +52,6 @@
 				"icon": "$(sign-out)"
 			},
 			{
-				"command": "vs-leet.openProblem",
-				"title": "Open Problem",
-				"category": "VS-Leet"
-			},
-			{
-				"command": "vs-leet.filterEasy",
-				"title": "Filter Easy Problems",
-				"category": "VS-Leet",
-				"icon": "$(check-circle)"
-			},
-			{
-				"command": "vs-leet.filterMedium",
-				"title": "Filter Medium Problems",
-				"category": "VS-Leet",
-				"icon": "$(circle-large-outline)"
-			},
-			{
-				"command": "vs-leet.filterHard",
-				"title": "Filter Hard Problems",
-				"category": "VS-Leet",
-				"icon": "$(flame)"
-			},
-			{
 				"command": "vs-leet.clearFilter",
 				"title": "Clear Filters",
 				"category": "VS-Leet",
@@ -93,12 +62,6 @@
 				"title": "Search Problems",
 				"category": "VS-Leet",
 				"icon": "$(search)"
-			},
-			{
-				"command": "vs-leet.filterByTag",
-				"title": "Filter by Tag",
-				"category": "VS-Leet",
-				"icon": "$(tag)"
 			},
 			{
 				"command": "vs-leet.addTag",
@@ -172,43 +135,19 @@
 					"group": "navigation@4"
 				}
 			],
-			"view/item/context": [
-				{
-					"command": "vs-leet.removeTag",
-					"when": "view == vs-leet.problemsView && viewItem == tagItem",
-					"group": "inline"
-				}
+			"view/item/context": [],
+			"commandPalette": [
+				{ "command": "vs-leet.signIn", "when": "false" },
+				{ "command": "vs-leet.signOut", "when": "false" },
+				{ "command": "vs-leet.refresh", "when": "false" },
+				{ "command": "vs-leet.clearFilter", "when": "false" },
+				{ "command": "vs-leet.search", "when": "false" },
+				{ "command": "vs-leet.addTag", "when": "false" },
+				{ "command": "vs-leet.removeTag", "when": "false" },
+				{ "command": "vs-leet.openSettings", "when": "false" }
 			]
 		},
-		"customEditors": [
-			{
-				"viewType": "vs-leet.problemView",
-				"displayName": "VS-Leet Problem Viewer",
-				"selector": [
-					{
-						"filenamePattern": "*.vs-leet-problem"
-					}
-				]
-			},
-			{
-				"viewType": "vs-leet.problemList",
-				"displayName": "VS-Leet Problems List",
-				"selector": [
-					{
-						"filenamePattern": "*.vs-leet-list"
-					}
-				]
-			},
-			{
-				"viewType": "vs-leet.problemSession",
-				"displayName": "VS-Leet Problem Session",
-				"selector": [
-					{
-						"filenamePattern": "*.vs-leet-session"
-					}
-				]
-			}
-		],
+		"customEditors": [],
 		"configuration": {
 			"type": "object",
 			"title": "VS-Leet",

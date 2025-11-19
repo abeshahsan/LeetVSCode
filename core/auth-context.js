@@ -1,16 +1,16 @@
 import * as vscode from "vscode";
-import { notifySession, closeWebview } from "./webview-manager.js";
+import { closeWebview } from "./webview-manager.js";
 import { runLoginProcess } from "./login-manager.js";
 import logger from "./logger.js";
 
-export async function refreshAuthUI(context, provider) {
-	const cookies = context.globalState.get("leetcode_cookies");
+export async function refreshSidebar(context, provider) {
+	const stored_cookies = context.globalState.get("leetcode_cookies");
 	let loggedIn = false;
 
-	if (cookies) {
-		// Validate cookie by checking user status
-		const isValid = await validateCookie(cookies);
-		console.log("Cookie valid:", isValid);
+	if (stored_cookies) {
+		logger.info("Sotered cookies found. Validating...");
+		const isValid = await validateCookie(stored_cookies);
+		logger.info(`Stored Cookie validation result: ${isValid}`);
 		if (!isValid) {
 			await context.globalState.update("leetcode_cookies", null);
 			await context.globalState.update("leetcode_user", null);
@@ -20,12 +20,9 @@ export async function refreshAuthUI(context, provider) {
 	}
 
 	if (loggedIn) {
-		logger.info("User is logged in. Notifying webview and refreshing problems.");
-		notifySession(true);
-		// Force refresh problems after login
-		await provider.forceRefresh();
+		logger.info("User is logged in. Refreshing sidebar...");
+		await provider.cleanup();
 	} else {
-		notifySession(false);
 		provider._problems = [];
 		provider.refresh();
 	}
@@ -40,7 +37,7 @@ export async function signOut(context, provider) {
 	await context.globalState.update("leetcode_user", null);
 	vscode.window.showInformationMessage("Logged out successfully.");
 	closeWebview();
-	await refreshAuthUI(context, provider);
+	await refreshSidebar(context, provider);
 }
 
 export async function validateCookie(cookies) {

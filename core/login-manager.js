@@ -7,7 +7,9 @@ import logger from "./logger.js";
 export async function runLoginProcess(panel, context, provider) {
 	try {
 		const result = await runPlaywrightLogin(context);
-		await context.globalState.update("leetcode_cookies", result.cookies);
+		// Persist cookie header string and csrf token separately
+		await context.globalState.update("leetcode_cookies", result.cookie);
+		await context.globalState.update("leetcode_csrftoken", result.csrftoken || "");
 		await context.globalState.update("leetcode_user", result.user);
 		
 		// Refresh UI after successful login
@@ -49,15 +51,17 @@ export async function runPlaywrightLogin(context) {
 		page = await browserContext.newPage();
 		await page.goto("https://leetcode.com/accounts/login/", { waitUntil: "domcontentloaded" });
 
-		const cookies = await waitForLogin(browserContext);
-		logger.debug("Cookies: " + cookies);
+		const login = await waitForLogin(browserContext);
+		logger.debug("Cookies: " + JSON.stringify(!!login));
 
-		if (!cookies) {
+		if (!login) {
 			throw new Error("Login not detected (timeout). Please keep the browser open and complete the login.");
 		}
 
-		// Fetch user info
-		let user = await fetchLoggedInUser(cookies);
+		// Fetch user info using cookie header string
+		const cookieHeader = login.cookie;
+		const csrftoken = login.csrftoken;
+		let user = await fetchLoggedInUser(cookieHeader);
 
 		if (!user || !user.username) {
 			logger.error("Failed to fetch logged-in user info.");
@@ -68,7 +72,7 @@ export async function runPlaywrightLogin(context) {
 
 		vscode.window.showInformationMessage(user ? `✅ Logged in as ${user.username}` : `✅ Logged in`);
 
-		return { user, cookies };
+		return { user, cookie: cookieHeader, csrftoken };
 	} finally {
 		await closeResources(page, browserContext);
 	}

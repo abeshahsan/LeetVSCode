@@ -1,11 +1,9 @@
 import * as vscode from "vscode";
 import { runLoginProcess } from "./login-manager.js";
-import { ProblemListQuery } from "./services/leetcode-queries.js";
-import Problem from "../models/problem.js";
 import { getWebviewHtml } from "./services/webview-template.js";
 import { openOrCreateSolutionFile } from "./services/solution-file.js";
 import { runRemote, submitSolution } from "./services/leetcode-runner.js";
-import { openProblemFromSlug, getProblemDetailsJson } from "./services/problem-service.js";
+import { openProblemFromSlug } from "./services/problem-service.js";
 import logger from "./logger.js";
 
 let panel;
@@ -62,9 +60,6 @@ function _attachWebviewHandlers(panelInstance, context) {
 
 function _attachDisposeHandler(panelInstance) {
 	panelInstance.onDidDispose(() => {
-		if (panel) {
-			panel.webview.postMessage({ command: "requestStateSave" });
-		}
 		panel = undefined;
 	});
 }
@@ -79,18 +74,6 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 			}
 			break;
 
-		case "checkSession": {
-			const sess = context.globalState.get("leetcode_cookies");
-			panelInstance?.webview.postMessage({ command: "session", cookiesExist: !!sess });
-			break;
-		}
-
-		case "open-problem": {
-			const { titleSlug } = message.problem;
-			await openProblemFromSlug(context, titleSlug, panelInstance);
-			break;
-		}
-
 		case "open-solution-file": {
 			const { slug, langSlug, code } = message;
 			await openOrCreateSolutionFile(context, { slug, langSlug, code });
@@ -103,56 +86,11 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 			break;
 		}
 
-		case "getAllProblems": {
-			try {
-				logger.debug(`Fetching all problems`);
-				let cookies = context.globalState.get("leetcode_cookies");
-				const data = await new ProblemListQuery({ cookies }).run();
-				const problems = data?.problemsetQuestionList?.questions || [];
-
-				problems.forEach((element) => {
-					new Problem(element).addToAll();
-				});
-
-				logger.debug(`Found ${problems.length} problems`);
-				panelInstance?.webview.postMessage({ command: "allProblems", data: problems });
-			} catch (err) {
-				logger.error(`Failed to fetch problems: ${err.message}`);
-				panelInstance?.webview.postMessage({ command: "allProblemsError", error: String(err) });
-			}
-			break;
-		}
-
-		case "getProblemDetails": {
-			const { slug } = message;
-			try {
-				const details = await getProblemDetailsJson(context, slug);
-				const defaultLanguage = vscode.workspace.getConfiguration("vs-leet").get("defaultLanguage");
-				panelInstance?.webview.postMessage({
-					command: "problemDetails",
-					data: details,
-					defaultLanguage: defaultLanguage,
-				});
-			} catch (err) {
-				panelInstance?.webview.postMessage({ command: "problemDetailsError", error: String(err) });
-			}
-			break;
-		}
-
 		case "submit-code": {
 			const { slug, langSlug } = message;
 			await submitSolution(panelInstance, context, { slug, langSlug });
 			break;
 		}
-
-		case "logout":
-			await vscode.commands.executeCommand("vs-leet.signOut", context);
-			break;
-
-		case "saveState":
-			await context.globalState.update("leetcode_state", message.state);
-			panelInstance?.webview.postMessage({ command: "stateSaved" });
-			break;
 	}
 }
 export function closeWebview() {
@@ -163,15 +101,6 @@ export function closeWebview() {
 		} catch (error) {
 			// Panel might already be disposed
 		}
-	}
-}
-
-export function notifySession(loggedIn) {
-	if (panel) {
-		panel.webview.postMessage({
-			command: "session",
-			cookiesExist: loggedIn,
-		});
 	}
 }
 

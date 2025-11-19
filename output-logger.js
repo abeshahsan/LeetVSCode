@@ -12,8 +12,7 @@ export function logDebug(message) {
 }
 
 export function logInfo(message) {
-	// Log important events (activation, errors, user actions)
-	leetcodeOutputChannel.appendLine(message);
+    // Deprecated: Prefer using specific logger or levels; leaving no-op to avoid noise
 }
 
 export function logError(message) {
