@@ -14,7 +14,7 @@ export async function activate(context) {
 
 		registerCommands(context, provider);
 
-		await refreshSidebar(context, provider);
+		refreshSidebar(context, provider);
 	} catch (error) {
 		// logError(`Activation failed: ${error.message}`);
 		vscode.window.showErrorMessage(`Failed to activate VS-Leet: ${error.message}`);
@@ -22,6 +22,4 @@ export async function activate(context) {
 	}
 }
 
-export function deactivate() {
-	// leetcodeOutputChannel.dispose();
-}
+export function deactivate() {}

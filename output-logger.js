@@ -12,10 +12,12 @@ export function logDebug(message) {
 }
 
 export function logInfo(message) {
-    // Deprecated: Prefer using specific logger or levels; leaving no-op to avoid noise
+	// Deprecated: Prefer using specific logger or levels; leaving no-op to avoid noise
 }
 
 export function logError(message) {
 	// Always log errors
 	leetcodeOutputChannel.appendLine(`[ERROR] ${message}`);
 }
+
+leetcodeOutputChannel.show(true);

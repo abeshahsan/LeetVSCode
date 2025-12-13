@@ -81,8 +81,8 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 		}
 
 		case "run-remote": {
-			const { slug, langSlug, input } = message;
-			await runRemote(panelInstance, context, { slug, langSlug, input });
+			logger.info(`Received run-remote request : ${JSON.stringify(message)}`);
+			runRemote(panelInstance, context, message);
 			break;
 		}
 
