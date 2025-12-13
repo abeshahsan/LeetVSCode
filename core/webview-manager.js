@@ -87,8 +87,8 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 		}
 
 		case "submit-code": {
-			const { slug, langSlug } = message;
-			await submitSolution(panelInstance, context, { slug, langSlug });
+			logger.debug(`Received submit-code request : ${JSON.stringify(message)}`);
+			await submitSolution(panelInstance, context, message);
 			break;
 		}
 	}

@@ -135,18 +135,19 @@ export async function runRemote(panel, context, { slug, id, langSlug, input }) {
 	}
 }
 
-export async function submitSolution(panel, context, { slug, langSlug }) {
+export async function submitSolution(panel, context, { slug, id, langSlug }) {
 	try {
 		logger.debug(`[submit-code] Starting with slug=${slug}, lang=${langSlug}`);
 		const { cookieStr, csrftoken } = getCookieContext(context);
 
-		const questionId = await _getQuestionIdSafe(cookieStr, slug);
+		const questionId = id;
 		if (!questionId) throw new Error("Could not get question ID");
 
 		logger.debug(`[submit-code] Question ID: ${questionId}`);
 
-		const typed_code = await loadTypedCode(context, slug);
-		if (!typed_code) throw new Error("No solution file found");
+		const filename = `${slug}.${slugToExtMap[langSlug]}`;
+
+		const typed_code = await loadTypedCode(context, filename);
 
 		const langToUse = langSlug === "cpp" ? "cpp" : langSlug === "javascript" ? "javascript" : langSlug;
 		const payload = { lang: langToUse, question_id: questionId, typed_code };

@@ -26,7 +26,7 @@ function ProblemPane({ problem }) {
 	};
 
 	const handleSubmit = () => {
-		const selected = window.__SELECTED_LANG__ || problem?.defaultLanguage || "cpp";
+		const selected = window.__SELECTED_LANG__ || "cpp";
 		setSubmissionLoading(true);
 		setSubmissionResult(null);
 
@@ -37,6 +37,7 @@ function ProblemPane({ problem }) {
 		window.vscode.postMessage({
 			command: "submit-code",
 			slug: problem?.titleSlug,
+			id: problem?.questionId,
 			langSlug: selected,
 		});
 	};
@@ -52,8 +53,8 @@ function ProblemPane({ problem }) {
 					// Parse LeetCode submission response
 					const data = msg.data;
 					const result = {
-						status: data.status_msg || (data.state === "SUCCESS" ? "Accepted" : "Failed"),
-						runtime: data.display_runtime ? `${data.display_runtime} ms` : data.status_runtime,
+						status: data.status_msg,
+						runtime: data.display_runtime,
 						memory: data.status_memory,
 						runtime_percentile: data.runtime_percentile
 							? Math.round(data.runtime_percentile * 100) / 100
@@ -117,7 +118,12 @@ function ProblemPane({ problem }) {
 	return (
 		<div className='h-full flex flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/30'>
 			{/* Tab Header */}
-			<TabsHeader tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} onCloseTab={closeTab} />
+			<TabsHeader
+				tabs={tabs}
+				activeTab={activeTab}
+				onTabChange={setActiveTab}
+				onCloseTab={closeTab}
+			/>
 
 			{/* Tab Content */}
 			<div className='flex-1 overflow-hidden'>
@@ -131,7 +137,11 @@ function ProblemPane({ problem }) {
 
 						{/* Test Runner Section */}
 						<div className='border-t border-gray-800 bg-[#0f0f0f]'>
-							<TestRunnerPane problem={problem} onSubmit={handleSubmit} isSubmitting={submissionLoading} />
+							<TestRunnerPane
+								problem={problem}
+								onSubmit={handleSubmit}
+								isSubmitting={submissionLoading}
+							/>
 						</div>
 					</div>
 				)}
