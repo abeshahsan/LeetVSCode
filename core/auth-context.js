@@ -9,7 +9,7 @@ export async function refreshSidebar(context, provider) {
 	let loggedIn = false;
 
 	if (stored_cookies) {
-		logger.info("Sotered cookies found. Validating...");
+		logger.info("Stored cookies found. Validating...");
 		const isValid = await validateCookie(stored_cookies);
 		logger.info(`Stored Cookie validation result: ${isValid}`);
 		if (!isValid) {

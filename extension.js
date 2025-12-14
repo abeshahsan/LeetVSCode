@@ -5,7 +5,6 @@ import { refreshSidebar } from "./core/auth-context.js";
 import { setProvider, setPanel, _attachWebviewHandlers } from "./core/webview-manager.js";
 import { initializeSolutionDirectory } from "./core/utils/directory-manager.js";
 import { WebviewSerializer } from "./core/webview-serializer.js";
-import { clearStorage } from "./core/utils/storage-manager.js";
 
 export async function activate(context) {
 	try {

@@ -66,7 +66,7 @@ export function registerCommands(context, provider) {
 		}),
 		vscode.commands.registerCommand("vs-leet.installChromium", async () => {
 			try {
-				if (isChromiumInstalled()) {
+				if (await isChromiumInstalled()) {
 					vscode.window.showInformationMessage("Chromium is already installed.");
 					return;
 				}
@@ -78,7 +78,7 @@ export function registerCommands(context, provider) {
 		}),
 		vscode.commands.registerCommand("vs-leet.uninstallChromium", async () => {
 			try {
-				if (!(isChromiumInstalled())) {
+				if (!(await isChromiumInstalled())) {
 					vscode.window.showInformationMessage("Chromium is not installed.");
 					return;
 				}

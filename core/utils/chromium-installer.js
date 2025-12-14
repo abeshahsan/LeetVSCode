@@ -18,16 +18,6 @@ export async function isChromiumInstalled() {
 }
 
 /**
- * Get Chromium executable path (Playwright manages this internally)
- */
-export function getChromiumExecutablePath() {
-	// Playwright manages browser installations internally
-	// This function is kept for backward compatibility but returns null
-	// The actual executable path is handled by Playwright
-	return null;
-}
-
-/**
  * Install Chromium using Playwright CLI with progress notification
  */
 export async function installChromium() {
@@ -61,14 +51,12 @@ export async function installChromium() {
 						shell: true,
 					});
 
-					let stdoutData = "";
 					let stderrData = "";
 					let lastPercent = 0;
 
 					// Capture stdout and show progress
 					installProcess.stdout.on("data", (data) => {
 						const output = data.toString();
-						stdoutData += output;
 						
 						// Extract percentage from output
 						const percentMatch = output.match(/(\d+)%/);
