@@ -115,13 +115,6 @@ export async function clearStorage(context) {
 }
 
 /**
- * Get entire storage object (for debugging)
- */
-export function getFullStorage(context) {
-	return getStorage(context);
-}
-
-/**
  * check if storage key exists
  */
 export function hasStorageKey(context) {

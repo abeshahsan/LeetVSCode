@@ -21,7 +21,7 @@ export async function refreshSidebar(context, provider) {
 	}
 
 	// Update context for button visibility
-	vscode.commands.executeCommand('setContext', 'vs-leet.loggedIn', loggedIn);
+	await vscode.commands.executeCommand("setContext", "vs-leet.loggedIn", loggedIn);
 
 	if (loggedIn) {
 		logger.info("User is logged in. Refreshing sidebar...");
@@ -34,8 +34,7 @@ export async function refreshSidebar(context, provider) {
 
 export async function signIn(context, provider) {
 	await runLoginProcess(undefined, context, provider);
-	// Update context immediately after login
-	vscode.commands.executeCommand('setContext', 'vs-leet.loggedIn', true);
+	await refreshSidebar(context, provider);
 }
 
 export async function signOut(context, provider) {
@@ -44,7 +43,7 @@ export async function signOut(context, provider) {
 	await setCsrfToken(context, null);
 	
 	// Update context immediately
-	vscode.commands.executeCommand('setContext', 'vs-leet.loggedIn', false);
+	await vscode.commands.executeCommand("setContext", "vs-leet.loggedIn", false);
 	
 	// Clear problems from sidebar
 	provider._problems = [];
@@ -55,6 +54,7 @@ export async function signOut(context, provider) {
 	
 	vscode.window.showInformationMessage("Logged out successfully.");
 	closeWebview();
+	await refreshSidebar(context, provider);
 }
 
 export async function validateCookie(cookies) {

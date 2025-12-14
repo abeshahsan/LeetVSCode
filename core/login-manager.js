@@ -1,7 +1,7 @@
 import path from "path";
 import * as vscode from "vscode";
 import { chromium } from "playwright";
-import { leetcodeOutputChannel, logError } from "../output-logger.js";
+import { leetcodeOutputChannel } from "../output-logger.js";
 import logger from "./logger.js";
 import { setCookies, setCsrfToken } from "./utils/storage-manager.js";
 import { ensureChromium } from "./utils/chromium-installer.js";
@@ -27,6 +27,7 @@ export async function runLoginProcess(panel, context, provider) {
 			success: false,
 			error: String(err),
 		});
+		throw err;
 	}
 }
 
