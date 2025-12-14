@@ -4,6 +4,7 @@ import { refreshSidebar, signIn, signOut } from "./auth-context.js";
 import { openSettingsView } from "./settings-view.js";
 import { leetcodeOutputChannel } from "../output-logger.js";
 import { changeSolutionDirectory } from "./utils/directory-manager.js";
+import { installChromium, uninstallChromium, isChromiumInstalled } from "./utils/chromium-installer.js";
 
 export function registerCommands(context, provider) {
 	context.subscriptions.push(
@@ -61,6 +62,37 @@ export function registerCommands(context, provider) {
 			const newPath = await changeSolutionDirectory(context);
 			if (newPath) {
 				vscode.window.showInformationMessage(`Solutions directory updated to: ${newPath}`);
+			}
+		}),
+		vscode.commands.registerCommand("vs-leet.installChromium", async () => {
+			try {
+				if (isChromiumInstalled()) {
+					vscode.window.showInformationMessage("Chromium is already installed.");
+					return;
+				}
+				await installChromium();
+				vscode.window.showInformationMessage("Chromium installed successfully!");
+			} catch (error) {
+				vscode.window.showErrorMessage(`Failed to install Chromium: ${error.message}`);
+			}
+		}),
+		vscode.commands.registerCommand("vs-leet.uninstallChromium", async () => {
+			try {
+				if (!(isChromiumInstalled())) {
+					vscode.window.showInformationMessage("Chromium is not installed.");
+					return;
+				}
+				const choice = await vscode.window.showWarningMessage(
+					"Are you sure you want to uninstall Chromium?",
+					{ modal: true },
+					"Uninstall"
+				);
+				if (choice === "Uninstall") {
+					await uninstallChromium();
+					vscode.window.showInformationMessage("Chromium uninstalled successfully!");
+				}
+			} catch (error) {
+				vscode.window.showErrorMessage(`Failed to uninstall Chromium: ${error.message}`);
 			}
 		})
 	);

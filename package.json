@@ -35,7 +35,6 @@
 		"color": "#1e1e1e",
 		"theme": "dark"
 	},
-	
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
@@ -82,16 +81,20 @@
 				"icon": "$(refresh)"
 			},
 			{
-				"command": "vs-leet.openSettings",
-				"title": "Open Settings",
-				"category": "VS-Leet",
-				"icon": "$(settings-gear)"
-			},
-			{
 				"command": "vs-leet.changeSolutionDirectory",
 				"title": "Change Solution Directory",
 				"category": "VS-Leet",
 				"icon": "$(folder)"
+			},
+			{
+				"command": "vs-leet.installChromium",
+				"title": "Install Chromium",
+				"category": "VS-Leet"
+			},
+			{
+				"command": "vs-leet.uninstallChromium",
+				"title": "Uninstall Chromium",
+				"category": "VS-Leet"
 			}
 		],
 		"viewsContainers": {
@@ -143,14 +146,38 @@
 			],
 			"view/item/context": [],
 			"commandPalette": [
-				{ "command": "vs-leet.signIn", "when": "false" },
-				{ "command": "vs-leet.signOut", "when": "false" },
-				{ "command": "vs-leet.refresh", "when": "false" },
-				{ "command": "vs-leet.clearFilter", "when": "false" },
-				{ "command": "vs-leet.search", "when": "false" },
-				{ "command": "vs-leet.addTag", "when": "false" },
-				{ "command": "vs-leet.removeTag", "when": "false" },
-				{ "command": "vs-leet.openSettings", "when": "false" }
+				{
+					"command": "vs-leet.signIn",
+					"when": "false"
+				},
+				{
+					"command": "vs-leet.signOut",
+					"when": "false"
+				},
+				{
+					"command": "vs-leet.refresh",
+					"when": "false"
+				},
+				{
+					"command": "vs-leet.clearFilter",
+					"when": "false"
+				},
+				{
+					"command": "vs-leet.search",
+					"when": "false"
+				},
+				{
+					"command": "vs-leet.addTag",
+					"when": "false"
+				},
+				{
+					"command": "vs-leet.removeTag",
+					"when": "false"
+				},
+				{
+					"command": "vs-leet.openSettings",
+					"when": "false"
+				}
 			]
 		},
 		"customEditors": [],

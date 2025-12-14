@@ -4,6 +4,7 @@ import { chromium } from "playwright";
 import { leetcodeOutputChannel, logError } from "../output-logger.js";
 import logger from "./logger.js";
 import { setCookies, setCsrfToken } from "./utils/storage-manager.js";
+import { ensureChromium } from "./utils/chromium-installer.js";
 
 export async function runLoginProcess(panel, context, provider) {
 	try {
@@ -38,10 +39,16 @@ export async function runPlaywrightLogin(context) {
 	let page;
 
 	try {
-		browserContext = await chromium.launchPersistentContext(userDataDir, {
+		// Ensure Chromium is installed before launching
+		await ensureChromium();
+		
+		// Playwright manages the executable path internally when not specified
+		const launchOptions = {
 			headless: false,
 			args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
-		});
+		};
+		
+		browserContext = await chromium.launchPersistentContext(userDataDir, launchOptions);
 
 		await browserContext.clearCookies();
 
