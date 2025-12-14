@@ -3,14 +3,14 @@ import * as vscode from "vscode";
 import { chromium } from "playwright";
 import { leetcodeOutputChannel, logError } from "../output-logger.js";
 import logger from "./logger.js";
+import { setCookies, setCsrfToken } from "./utils/storage-manager.js";
 
 export async function runLoginProcess(panel, context, provider) {
 	try {
 		const result = await runPlaywrightLogin(context);
 		// Persist cookie header string and csrf token separately
-		await context.globalState.update("leetcode_cookies", result.cookie);
-		await context.globalState.update("leetcode_csrftoken", result.csrftoken || "");
-		await context.globalState.update("leetcode_user", result.user);
+		await setCookies(context, result.cookie);
+		await setCsrfToken(context, result.csrftoken || "");
 		
 		// Refresh UI after successful login
 		if (provider) {

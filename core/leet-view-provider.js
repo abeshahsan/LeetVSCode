@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { ProblemListQuery } from "./services/leetcode-queries.js";
 import logger from "./logger.js";
+import { getCookies } from "./utils/storage-manager.js";
 
 export class LeetViewProvider {
 	constructor(context) {
@@ -65,7 +66,7 @@ export class LeetViewProvider {
 	}
 
 	async getChildren(element) {
-		const cookies = this.context.globalState.get("leetcode_cookies");
+		const cookies = getCookies(this.context);
 		const loggedIn = !!cookies;
 
 		logger.debug(`Getting children for element: ${JSON.stringify(element)}`);

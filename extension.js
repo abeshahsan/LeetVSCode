@@ -29,7 +29,6 @@ export async function activate(context) {
 	} catch (error) {
 		// logError(`Activation failed: ${error.message}`);
 		vscode.window.showErrorMessage(`Failed to activate VS-Leet: ${error.message}`);
-		throw error;
 	}
 }
 

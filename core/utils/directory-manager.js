@@ -2,9 +2,14 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import logger from "../logger.js";
+import {
+	getSolutionDirectory,
+	setSolutionDirectory,
+	getLastDirectoryPrompt,
+	setLastDirectoryPrompt,
+	hasStorageKey,
+} from "./storage-manager.js";
 
-const STORAGE_KEY = "solutionDirectoryPath";
-const LAST_PROMPT_KEY = "solutionDirectoryLastPrompt";
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
@@ -14,8 +19,8 @@ const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
  * - More than a week has passed since last prompt
  */
 export function shouldPromptForDirectory(context) {
-	const savedPath = context.globalState.get(STORAGE_KEY);
-	const lastPrompt = context.globalState.get(LAST_PROMPT_KEY);
+	const savedPath = getSolutionDirectory(context);
+	const lastPrompt = getLastDirectoryPrompt(context);
 
 	// First time setup
 	if (!savedPath) {
@@ -36,16 +41,14 @@ export function shouldPromptForDirectory(context) {
 /**
  * Get the current solution directory path from storage
  */
-export function getSolutionDirectory(context) {
-	return context.globalState.get(STORAGE_KEY);
-}
+export { getSolutionDirectory } from "./storage-manager.js";
 
 /**
  * Save solution directory path and update last prompt timestamp
  */
 async function saveSolutionDirectory(context, directoryPath) {
-	await context.globalState.update(STORAGE_KEY, directoryPath);
-	await context.globalState.update(LAST_PROMPT_KEY, Date.now());
+	await setSolutionDirectory(context, directoryPath);
+	await setLastDirectoryPrompt(context, Date.now());
 	logger.info(`Solution directory saved: ${directoryPath}`);
 }
 
@@ -141,7 +144,7 @@ export async function promptForDirectorySetup(context, isFirstTime = false) {
  * Returns the active solution directory path
  */
 export async function initializeSolutionDirectory(context) {
-	const isFirstTime = !context.globalState.get(STORAGE_KEY);
+	const isFirstTime = !hasStorageKey(context);
 
 	if (shouldPromptForDirectory(context)) {
 		return await promptForDirectorySetup(context, isFirstTime);

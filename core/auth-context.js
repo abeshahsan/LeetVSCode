@@ -2,9 +2,10 @@ import * as vscode from "vscode";
 import { closeWebview } from "./webview-manager.js";
 import { runLoginProcess } from "./login-manager.js";
 import logger from "./logger.js";
+import { getCookies, setCookies, setCsrfToken } from "./utils/storage-manager.js";
 
 export async function refreshSidebar(context, provider) {
-	const stored_cookies = context.globalState.get("leetcode_cookies");
+	const stored_cookies = getCookies(context);
 	let loggedIn = false;
 
 	if (stored_cookies) {
@@ -12,8 +13,8 @@ export async function refreshSidebar(context, provider) {
 		const isValid = await validateCookie(stored_cookies);
 		logger.info(`Stored Cookie validation result: ${isValid}`);
 		if (!isValid) {
-			await context.globalState.update("leetcode_cookies", null);
-			await context.globalState.update("leetcode_user", null);
+			await setCookies(context, null);
+			await setCsrfToken(context, null);
 		} else {
 			loggedIn = true;
 		}
@@ -33,8 +34,8 @@ export async function signIn(context, provider) {
 }
 
 export async function signOut(context, provider) {
-	await context.globalState.update("leetcode_cookies", null);
-	await context.globalState.update("leetcode_user", null);
+	await setCookies(context, null);
+	await setCsrfToken(context, null);
 	vscode.window.showInformationMessage("Logged out successfully.");
 	closeWebview();
 	await refreshSidebar(context, provider);

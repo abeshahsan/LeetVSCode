@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { getWebviewHtml } from "./services/webview-template.js";
 import { openProblemFromSlug } from "./services/problem-service.js";
+import { setLastProblemSlug, getLastProblemSlug } from "./utils/storage-manager.js";
 import logger from "./logger.js";
 
 /**
@@ -39,15 +40,18 @@ export class WebviewSerializer {
 				}
 			});
 
+			// Get last problem from centralized storage (prefer state, fallback to storage)
+			const lastProblemSlug = state?.lastProblemSlug || getLastProblemSlug(this._context);
+
 			// Refetch and restore last opened problem if available
-			if (state?.lastProblemSlug) {
-				logger.info(`Refetching last problem: ${state.lastProblemSlug}`);
+			if (lastProblemSlug) {
+				logger.info(`Refetching last problem: ${lastProblemSlug}`);
 				// Wait for webview to be ready before fetching
 				setTimeout(async () => {
 					try {
-						await openProblemFromSlug(this._context, state.lastProblemSlug, webviewPanel);
-						saveWebviewState(webviewPanel, state.lastProblemSlug);
-						logger.info(`Successfully restored problem: ${state.lastProblemSlug}`);
+						await openProblemFromSlug(this._context, lastProblemSlug, webviewPanel);
+						await saveWebviewState(webviewPanel, lastProblemSlug, this._context);
+						logger.info(`Successfully restored problem: ${lastProblemSlug}`);
 					} catch (err) {
 						logger.error(`Failed to restore problem: ${err.message}`);
 					}
@@ -65,7 +69,7 @@ export class WebviewSerializer {
 /**
  * Save current problem to webview state for serialization
  */
-export function saveWebviewState(panel, problemSlug) {
+export async function saveWebviewState(panel, problemSlug, context) {
 	if (!panel || !problemSlug) return;
 	
 	try {
@@ -77,6 +81,11 @@ export function saveWebviewState(panel, problemSlug) {
 		
 		// Store on panel for internal use
 		panel._vsleetState = state;
+		
+		// Also save to centralized storage as fallback
+		if (context) {
+			await setLastProblemSlug(context, problemSlug);
+		}
 		
 		logger.debug(`Saved webview state: ${problemSlug}`);
 	} catch (err) {

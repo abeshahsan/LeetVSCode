@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import ProblemDetails from "../../models/problem-details.js";
 import { ProblemDetailsQuery } from "./leetcode-queries.js";
-import { getDefaultLanguage } from "../utils/language-manager.js";
+import { getDefaultLanguage, getCookies } from "../utils/storage-manager.js";
 
 export async function getProblemDetailsJson(context, slug) {
-	const cookies = context.globalState.get("leetcode_cookies");
+	const cookies = getCookies(context);
 	const res = await new ProblemDetailsQuery({ cookies }).run(slug);
 	return ProblemDetails.fromGraphQL(res).toJSON();
 }

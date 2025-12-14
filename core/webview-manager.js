@@ -5,7 +5,7 @@ import { openOrCreateSolutionFile } from "./services/solution-file.js";
 import { runRemote, submitSolution } from "./services/leetcode-runner.js";
 import { openProblemFromSlug } from "./services/problem-service.js";
 import logger from "./logger.js";
-import { saveDefaultLanguage } from "./utils/language-manager.js";
+import { setDefaultLanguage } from "./utils/storage-manager.js";
 import { saveWebviewState, getWebviewState } from "./webview-serializer.js";
 
 let panel;
@@ -113,7 +113,7 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 		case "language-changed": {
 			const { langSlug } = message;
 			if (langSlug) {
-				await saveDefaultLanguage(context, langSlug);
+				await setDefaultLanguage(context, langSlug);
 				logger.debug(`Default language changed to: ${langSlug}`);
 			}
 			break;
@@ -136,7 +136,7 @@ export async function openProblemFromExtension(context, titleSlug) {
 		createOrShowWebview(context);
 		await openProblemFromSlug(context, titleSlug, panel);
 		// Save problem slug for serialization
-		saveWebviewState(panel, titleSlug);
+		await saveWebviewState(panel, titleSlug, context);
 	} catch (err) {
 		logger.error(`Failed to open problem: ${err.message}`);
 		vscode.window.showErrorMessage(`Failed to open problem: ${err.message}`);

@@ -8,10 +8,11 @@ import { readJsonOrText } from "../utils/http.js";
 import { stripEditorSupport } from "../utils/editor-support.js";
 import { leetcodeOutputChannel } from "../../output-logger.js";
 import { getSolutionDirectory } from "../utils/directory-manager.js";
+import { getCookies, getCsrfToken } from "../utils/storage-manager.js";
 
 function getCookieContext(context) {
-	const cookieStr = context.globalState.get("leetcode_cookies") || "";
-	const csrftoken = context.globalState.get("leetcode_csrftoken") || "";
+	const cookieStr = getCookies(context) || "";
+	const csrftoken = getCsrfToken(context) || "";
 	return { cookieStr, csrftoken };
 }
 
