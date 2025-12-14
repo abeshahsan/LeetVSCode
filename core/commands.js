@@ -3,6 +3,7 @@ import { openProblemFromExtension } from "./webview-manager.js";
 import { refreshSidebar, signIn, signOut } from "./auth-context.js";
 import { openSettingsView } from "./settings-view.js";
 import { leetcodeOutputChannel } from "../output-logger.js";
+import { changeSolutionDirectory } from "./utils/directory-manager.js";
 
 export function registerCommands(context, provider) {
 	context.subscriptions.push(
@@ -55,6 +56,12 @@ export function registerCommands(context, provider) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand("vs-leet.openSettings", () => {
 			openSettingsView(context);
+		}),
+		vscode.commands.registerCommand("vs-leet.changeSolutionDirectory", async () => {
+			const newPath = await changeSolutionDirectory(context);
+			if (newPath) {
+				vscode.window.showInformationMessage(`Solutions directory updated to: ${newPath}`);
+			}
 		})
 	);
 }

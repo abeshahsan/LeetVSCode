@@ -7,6 +7,7 @@ import logger from "../logger.js";
 import { readJsonOrText } from "../utils/http.js";
 import { stripEditorSupport } from "../utils/editor-support.js";
 import { leetcodeOutputChannel } from "../../output-logger.js";
+import { getSolutionDirectory } from "../utils/directory-manager.js";
 
 function getCookieContext(context) {
 	const cookieStr = context.globalState.get("leetcode_cookies") || "";
@@ -31,7 +32,12 @@ function mapLang(langSlug) {
 
 async function loadTypedCode(context, filename) {
 	return new Promise((resolve, reject) => {
-		const solutionsDir = "F:/ProgrammingStuff/Extention/vsleet/Solutions";
+		const solutionsDir = getSolutionDirectory(context);
+
+		if (!solutionsDir) {
+			logger.error("Solutions directory not configured");
+			return reject(new Error("Solutions directory not configured. Please restart VS Code."));
+		}
 
 		if (!fs.existsSync(solutionsDir)) {
 			logger.error(`Solutions directory does not exist: ${solutionsDir}`);

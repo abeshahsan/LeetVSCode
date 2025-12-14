@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import { langToExtentionMap } from "./leetcode-queries.js";
 import { injectEditorSupport } from "../utils/editor-support.js";
+import { getSolutionDirectory } from "../utils/directory-manager.js";
 
 export async function openOrCreateSolutionFile(context, { slug, langSlug, code }) {
 	if (!slug || !langSlug) {
@@ -11,20 +12,12 @@ export async function openOrCreateSolutionFile(context, { slug, langSlug, code }
 	
 	const ext = langToExtentionMap[langSlug] || "txt";
 	
-	// Get settings
-	const config = vscode.workspace.getConfiguration("vs-leet");
-	const customWorkspace = config.get("workspaceFolder");
-	const solutionFolder = config.get("solutionFolder") || "Solutions";
+	// Get solution directory from global storage (set during activation)
+	const solutionsDir = getSolutionDirectory(context);
 	
-	// Use custom workspace if set, otherwise use workspace root
-	let workspaceRoot;
-	if (customWorkspace && customWorkspace.trim()) {
-		workspaceRoot = customWorkspace;
-	} else {
-		workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || context.extensionPath;
+	if (!solutionsDir) {
+		throw new Error("Solution directory not configured. Please restart VS Code.");
 	}
-	
-	const solutionsDir = path.join(workspaceRoot, solutionFolder);
 	
 	try {
 		fs.mkdirSync(solutionsDir, { recursive: true });

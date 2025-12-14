@@ -86,6 +86,12 @@
 				"title": "Open Settings",
 				"category": "VS-Leet",
 				"icon": "$(settings-gear)"
+			},
+			{
+				"command": "vs-leet.changeSolutionDirectory",
+				"title": "Change Solution Directory",
+				"category": "VS-Leet",
+				"icon": "$(folder)"
 			}
 		],
 		"viewsContainers": {

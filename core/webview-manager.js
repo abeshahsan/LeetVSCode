@@ -5,12 +5,18 @@ import { openOrCreateSolutionFile } from "./services/solution-file.js";
 import { runRemote, submitSolution } from "./services/leetcode-runner.js";
 import { openProblemFromSlug } from "./services/problem-service.js";
 import logger from "./logger.js";
+import { saveDefaultLanguage } from "./utils/language-manager.js";
+import { saveWebviewState, getWebviewState } from "./webview-serializer.js";
 
 let panel;
 let _provider; // Store provider reference for login refresh
 
 export function setProvider(provider) {
 	_provider = provider;
+}
+
+export function setPanel(panelInstance) {
+	panel = panelInstance;
 }
 
 export function createOrShowWebview(context) {
@@ -38,16 +44,28 @@ function _revealExistingPanel() {
 }
 
 function _createPanel(context, savedState) {
-	const newPanel = vscode.window.createWebviewPanel("webview", "VS-Leet", vscode.ViewColumn.One, {
-		enableScripts: true,
-		retainContextWhenHidden: true,
-	});
+	const newPanel = vscode.window.createWebviewPanel(
+		"vs-leet-webview",
+		"VS-Leet",
+		vscode.ViewColumn.One,
+		{
+			enableScripts: true,
+			retainContextWhenHidden: true,
+		}
+	);
 
 	newPanel.webview.html = getWebviewHtml(newPanel.webview, context.extensionPath, savedState);
+	
+	// Override getState for proper serialization
+	const originalGetState = newPanel.webview.getState;
+	newPanel.webview.getState = () => {
+		return getWebviewState(newPanel) || originalGetState?.call(newPanel.webview);
+	};
+	
 	return newPanel;
 }
 
-function _attachWebviewHandlers(panelInstance, context) {
+export function _attachWebviewHandlers(panelInstance, context) {
 	panelInstance.webview.onDidReceiveMessage(async (message) => {
 		try {
 			await _handleWebviewMessage(message, panelInstance, context);
@@ -61,7 +79,7 @@ function _attachWebviewHandlers(panelInstance, context) {
 function _attachDisposeHandler(panelInstance) {
 	panelInstance.onDidDispose(() => {
 		panel = undefined;
-	});
+	}, null, []);
 }
 
 async function _handleWebviewMessage(message, panelInstance, context) {
@@ -91,6 +109,15 @@ async function _handleWebviewMessage(message, panelInstance, context) {
 			await submitSolution(panelInstance, context, message);
 			break;
 		}
+
+		case "language-changed": {
+			const { langSlug } = message;
+			if (langSlug) {
+				await saveDefaultLanguage(context, langSlug);
+				logger.debug(`Default language changed to: ${langSlug}`);
+			}
+			break;
+		}
 	}
 }
 export function closeWebview() {
@@ -108,6 +135,8 @@ export async function openProblemFromExtension(context, titleSlug) {
 	try {
 		createOrShowWebview(context);
 		await openProblemFromSlug(context, titleSlug, panel);
+		// Save problem slug for serialization
+		saveWebviewState(panel, titleSlug);
 	} catch (err) {
 		logger.error(`Failed to open problem: ${err.message}`);
 		vscode.window.showErrorMessage(`Failed to open problem: ${err.message}`);

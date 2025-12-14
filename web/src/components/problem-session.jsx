@@ -102,8 +102,11 @@ export default function ProblemSession({ data, onBack }) {
 									setLangSlug(val);
 									openSolutionFile(val);
 									try {
-										window.__SELECTED_LANG__ = val;
-									} catch (e) {
+										window.__SELECTED_LANG__ = val;									// Save to VS Code global storage
+									window.vscode?.postMessage({
+										command: "language-changed",
+										langSlug: val,
+									});									} catch (e) {
 										// Failed to set language preference
 									}
 								}}
@@ -112,6 +115,7 @@ export default function ProblemSession({ data, onBack }) {
 									<option
 										key={c.langSlug}
 										value={c.langSlug}
+										className='bg-slate-800 text-gray-100'
 									>
 										{c.lang}
 									</option>

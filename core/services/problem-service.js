@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import ProblemDetails from "../../models/problem-details.js";
 import { ProblemDetailsQuery } from "./leetcode-queries.js";
+import { getDefaultLanguage } from "../utils/language-manager.js";
 
 export async function getProblemDetailsJson(context, slug) {
 	const cookies = context.globalState.get("leetcode_cookies");
@@ -11,7 +12,7 @@ export async function getProblemDetailsJson(context, slug) {
 export async function openProblemFromSlug(context, slug, panel) {
 	try {
 		const details = await getProblemDetailsJson(context, slug);
-		const defaultLanguage = vscode.workspace.getConfiguration("vs-leet").get("defaultLanguage");
+		const defaultLanguage = getDefaultLanguage(context);
 		panel?.webview.postMessage({ command: "problemDetails", data: details, defaultLanguage });
 		panel?.reveal(vscode.ViewColumn.One);
 	} catch (err) {
