@@ -10,9 +10,17 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 .git/**
 .github/**
+
+# Exclude root node_modules EXCEPT playwright (needed for browser binaries)
 node_modules/**
+!node_modules/playwright/**
+!node_modules/playwright-core/**
+
+.parcel-cache/**
+**/.parcel-cache/**
 .vscode-test/
 web/node_modules/**
+web/.parcel-cache/**
 web/src/**
 web/*.config.*
 web/package*.json
@@ -28,7 +36,16 @@ coverage/**
 .DS_Store
 Thumbs.db
 *.log
+*.vsix
 .env
 .env.*
 Solutions/**
 chrome-profile/**
+demo.js
+
+# Source files (bundled into dist/)
+extension.js
+output-logger.js
+core/**
+models/**
+esbuild.config.mjs

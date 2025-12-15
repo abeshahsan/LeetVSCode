@@ -7,7 +7,6 @@ import {
 	setSolutionDirectory,
 	getLastDirectoryPrompt,
 	setLastDirectoryPrompt,
-	hasStorageKey,
 } from "./storage-manager.js";
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -144,14 +143,14 @@ export async function promptForDirectorySetup(context, isFirstTime = false) {
  * Returns the active solution directory path
  */
 export async function initializeSolutionDirectory(context) {
-	const isFirstTime = !hasStorageKey(context);
+	const savedPath = getSolutionDirectory(context);
+	const isFirstTime = !savedPath;
 
 	if (shouldPromptForDirectory(context)) {
 		return await promptForDirectorySetup(context, isFirstTime);
 	}
 
 	// Already set and not time to re-prompt
-	const savedPath = getSolutionDirectory(context);
 	ensureDirectoryExists(savedPath);
 	return savedPath;
 }

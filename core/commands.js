@@ -4,6 +4,7 @@ import { refreshSidebar, signIn, signOut } from "./auth-context.js";
 import { openSettingsView } from "./settings-view.js";
 import { leetcodeOutputChannel } from "../output-logger.js";
 import { changeSolutionDirectory } from "./utils/directory-manager.js";
+import { clearStorage } from "./utils/storage-manager.js";
 import { installChromium, uninstallChromium, isChromiumInstalled } from "./utils/chromium-installer.js";
 
 export function registerCommands(context, provider) {
@@ -62,6 +63,17 @@ export function registerCommands(context, provider) {
 			const newPath = await changeSolutionDirectory(context);
 			if (newPath) {
 				vscode.window.showInformationMessage(`Solutions directory updated to: ${newPath}`);
+			}
+		}),
+		vscode.commands.registerCommand("vs-leet.clearStorage", async () => {
+			const choice = await vscode.window.showWarningMessage(
+				"This will clear all VS-Leet data including login, preferences, and directory settings. Continue?",
+				{ modal: true },
+				"Clear All"
+			);
+			if (choice === "Clear All") {
+				await clearStorage(context);
+				vscode.window.showInformationMessage("VS-Leet storage cleared. Please reload the window.");
 			}
 		}),
 		vscode.commands.registerCommand("vs-leet.installChromium", async () => {
