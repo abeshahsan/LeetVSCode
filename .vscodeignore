@@ -11,10 +11,8 @@ vsc-extension-quickstart.md
 .git/**
 .github/**
 
-# Exclude root node_modules EXCEPT playwright (needed for browser binaries)
+# Exclude root node_modules completely - not needed since we bundle
 node_modules/**
-!node_modules/playwright/**
-!node_modules/playwright-core/**
 
 .parcel-cache/**
 **/.parcel-cache/**
@@ -42,6 +40,10 @@ Thumbs.db
 Solutions/**
 chrome-profile/**
 demo.js
+convert-svg-to-png.js
+make-grayscale.js
+esbuild.config.mjs
+.npmignore
 
 # Source files (bundled into dist/)
 extension.js
