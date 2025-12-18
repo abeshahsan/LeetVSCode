@@ -30,19 +30,12 @@
 		"url": "https://github.com/abeshahsan/VS-Leet/issues"
 	},
 	"license": "MIT",
+	"icon": "resources/vs-leet-logo.png",
 	"galleryBanner": {
 		"color": "#1e1e1e",
 		"theme": "dark"
 	},
-	"activationEvents": [
-		"onStartupFinished",
-		"onCommand:vs-leet.refreshStatus",
-		"onCommand:vs-leet.openSettings",
-		"onCommand:vs-leet.openProblem",
-		"onCommand:vs-leet.toggleEasy",
-		"onCommand:vs-leet.toggleMedium",
-		"onCommand:vs-leet.toggleHard"
-	],
+	"activationEvents": [],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
@@ -89,6 +82,12 @@
 				"icon": "$(refresh)"
 			},
 			{
+				"command": "vs-leet.openSettings",
+				"title": "Open Settings",
+				"category": "VS-Leet",
+				"icon": "$(settings-gear)"
+			},
+			{
 				"command": "vs-leet.changeSolutionDirectory",
 				"title": "Change Solution Directory",
 				"category": "VS-Leet",
@@ -115,7 +114,7 @@
 				{
 					"id": "vs-leet",
 					"title": "VS-Leet",
-					"icon": "resources/icon.svg"
+					"icon": "resources/vs-leet-logo.svg"
 				}
 			]
 		},
@@ -124,7 +123,7 @@
 				{
 					"id": "vs-leet.problemsView",
 					"name": "Problems",
-					"icon": "resources/icon.svg"
+					"icon": "resources/vs-leet-logo.svg"
 				}
 			]
 		},
@@ -145,11 +144,6 @@
 					"command": "vs-leet.refresh",
 					"when": "view == vs-leet.problemsView && vs-leet.loggedIn",
 					"group": "navigation@2"
-				},
-				{
-					"command": "vs-leet.openSettings",
-					"when": "view == vs-leet.problemsView && vs-leet.loggedIn",
-					"group": "navigation@3"
 				},
 				{
 					"command": "vs-leet.clearFilter",
@@ -284,12 +278,13 @@
 		"@types/mocha": "^10.0.10",
 		"@types/node": "22.x",
 		"@types/vscode": "^1.90.0",
-		"esbuild": "^0.24.0",
 		"@vscode/test-cli": "^0.0.11",
 		"@vscode/test-electron": "^2.5.2",
 		"autoprefixer": "^10.4.21",
+		"esbuild": "^0.24.0",
 		"eslint": "^9.36.0",
 		"postcss": "^8.5.6",
+		"sharp": "^0.34.5",
 		"tailwindcss": "^3.4.18"
 	},
 	"dependencies": {
