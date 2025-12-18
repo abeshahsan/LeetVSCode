@@ -1,82 +1,83 @@
-# VS-Leet — LeetCode Integration for VS Code
+# VS-Leet
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/abeshahsan/VS-Leet)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![VS Code](https://img.shields.io/badge/VS%20Code-1.104.0+-007ACC.svg)](https://code.visualstudio.com/)
+Solve and manage LeetCode problems directly from Visual Studio Code.
 
-Solve LeetCode problems **directly inside Visual Studio Code**.  
-Browse problems, write solutions, run test cases, and submit — all without leaving your editor.
+VS-Leet brings the complete LeetCode workflow into your editor, allowing you to browse problems, write solutions, run tests, and submit — all without leaving VS Code. Perfect for interview preparation, competitive programming practice, and daily coding challenges.
 
 ---
 
-## Why VS-Leet?
+## Features
 
-VS-Leet brings the complete LeetCode workflow into VS Code, making algorithm practice faster, cleaner, and more enjoyable.
-
-- No browser switching  
-- No copy-pasting code  
-- No context loss  
-
-Ideal for interview preparation, DSA practice, and daily problem solving.
-
----
-
-## Key Features
-
-### Problem Browsing
-- Integrated sidebar with the full LeetCode problem list  
-- Filter by difficulty (Easy / Medium / Hard)  
-- Search by title or tags  
-- View acceptance rate and solved status  
-
-### Coding Experience
-- Clean, distraction-free problem view  
-- Syntax-highlighted descriptions  
-- Language support:
-  - C++
-  - Java
-  - Python
-  - JavaScript
-  - TypeScript  
-- Automatic solution saving to your workspace  
-
-### Testing & Execution
-- Run custom test cases instantly  
-- Example test cases preloaded  
-- Clear pass/fail results with output  
-- Runtime and memory usage displayed  
-
-### Submission & Feedback
-- Submit solutions directly to LeetCode  
-- Instant verdicts and detailed feedback  
-- Handles compile errors, runtime errors, and wrong answers  
-- Persistent login — authenticate once and continue coding  
+- **Browse LeetCode problems** from the activity bar sidebar
+- **Filter by difficulty** (Easy, Medium, Hard) and search by tags
+- **Open problem descriptions** directly in the editor with syntax highlighting
+- **Write solutions** in your preferred language (C++, Java, Python, JavaScript, TypeScript, and more)
+- **Run test cases** with instant feedback on results
+- **Submit solutions** directly to LeetCode with real-time verdict
+- **Track progress** with solved/attempted status indicators
+- **Automatic solution saving** to your workspace
+- **Persistent login** — authenticate once and stay signed in
 
 ---
 
-## UI & Performance
+## Usage
 
-- Modern, theme-aware interface  
-- Fast and responsive webview  
-- Clean, maintainable, modular codebase  
+1. Click the **VS-Leet icon** in the activity bar (left sidebar)
+2. Sign in with your LeetCode account when prompted
+3. Browse problems, filter by difficulty, or search by tags
+4. Click on a problem to open it in the editor
+5. Write your solution and run test cases
+6. Submit when ready!
 
 ---
 
-## Tech Stack
+## Configuration
 
-- VS Code Extension API  
-- React + Tailwind CSS  
-- Node.js (ES Modules)  
-- Playwright (secure login flow)  
-- Parcel (webview bundling)  
+Configure solution storage location and default language in VS Code settings:
+
+- `vs-leet.solutionFolder` — Folder name for storing solution files (default: "Solutions")
+
+---
+
+## Requirements
+
+- Visual Studio Code version 1.90.0 or higher
+- Active LeetCode account
+- Internet connection for problem syncing and submission
+
+---
+
+## Known Limitations
+
+- Login requires Chromium browser automation (installed automatically on first sign-in)
+- Some premium LeetCode features may not be available
+- Submission feedback depends on LeetCode server response times
+
+---
+
+## Release Notes
+
+### 1.0.3
+- Improved login flow stability
+- Enhanced problem filtering
+- Bug fixes and performance improvements
+
+### 1.0.0
+- Initial release of VS-Leet
+
+---
+
+## Support & Contributing
+
+Found a bug or have a feature request? Open an issue on GitHub:  
+**GitHub:** https://github.com/abeshahsan/VS-Leet
 
 ---
 
 ## License
 
-MIT License
+MIT License — See [LICENSE](LICENSE) for details
 
 ---
 
-If you find VS-Leet useful, consider starring the repository.
-Contributions and feedback are welcome.
+**Enjoy coding with VS-Leet!** 🚀
