@@ -3,7 +3,7 @@
 	"publisher": "abeshahsan",
 	"displayName": "VS-Leet - LeetCode Integration",
 	"description": "Complete LeetCode integration for VS Code - Browse, solve, test, and submit coding problems directly in your editor",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"engines": {
 		"vscode": "^1.90.0"
 	},
@@ -35,7 +35,9 @@
 		"color": "#1e1e1e",
 		"theme": "dark"
 	},
-	"activationEvents": [],
+	"activationEvents": [
+		"onStartupFinished"
+	],
 	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
@@ -107,6 +109,31 @@
 				"command": "vs-leet.uninstallChromium",
 				"title": "Uninstall Chromium",
 				"category": "VS-Leet"
+			},
+			{
+				"command": "vs-leet.openProblem",
+				"title": "Open Problem",
+				"category": "VS-Leet"
+			},
+			{
+				"command": "vs-leet.toggleEasy",
+				"title": "Toggle Easy Filter",
+				"category": "VS-Leet"
+			},
+			{
+				"command": "vs-leet.toggleMedium",
+				"title": "Toggle Medium Filter",
+				"category": "VS-Leet"
+			},
+			{
+				"command": "vs-leet.toggleHard",
+				"title": "Toggle Hard Filter",
+				"category": "VS-Leet"
+			},
+			{
+				"command": "vs-leet.refreshStatus",
+				"title": "Refresh Status",
+				"category": "VS-Leet"
 			}
 		],
 		"viewsContainers": {
@@ -155,35 +182,34 @@
 			"commandPalette": [
 				{
 					"command": "vs-leet.signIn",
-					"when": "false"
+					"when": "!vs-leet.loggedIn"
 				},
 				{
 					"command": "vs-leet.signOut",
-					"when": "false"
+					"when": "vs-leet.loggedIn"
 				},
 				{
 					"command": "vs-leet.refresh",
-					"when": "false"
+					"when": "vs-leet.loggedIn"
 				},
 				{
 					"command": "vs-leet.clearFilter",
-					"when": "false"
+					"when": "vs-leet.loggedIn"
 				},
 				{
 					"command": "vs-leet.search",
-					"when": "false"
+					"when": "vs-leet.loggedIn"
 				},
 				{
 					"command": "vs-leet.addTag",
-					"when": "false"
+					"when": "vs-leet.loggedIn"
 				},
 				{
 					"command": "vs-leet.removeTag",
-					"when": "false"
+					"when": "vs-leet.loggedIn"
 				},
 				{
-					"command": "vs-leet.openSettings",
-					"when": "false"
+					"command": "vs-leet.openSettings"
 				}
 			]
 		},
