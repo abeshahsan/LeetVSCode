@@ -1,6 +1,5 @@
 {
 	"name": "vs-leet",
-
 	"publisher": "abeshahsan",
 	"displayName": "VS-Leet - LeetCode Integration",
 	"description": "Complete LeetCode integration for VS Code - Browse, solve, test, and submit coding problems directly in your editor",
@@ -37,7 +36,7 @@
 		"theme": "dark"
 	},
 	"activationEvents": [
-		"onStartupFinished"
+		
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -63,8 +62,8 @@
 		"viewsWelcome": [
 			{
 				"view": "vs-leet.problemsView",
-				"contents": "Welcome to VS-Leet! Please sign in to browse and solve problems.\n[Sign In](command:vs-leet.signIn)",
-				"when": "!vs-leet.loggedIn"
+				"contents": "Welcome to VS-Leet! Please wait while we set things up for you...",
+				"when": "view != vs-leet.problemsView"
 			}
 		],
 		"customEditors": [],
