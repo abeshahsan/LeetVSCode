@@ -2,6 +2,9 @@ import path from "path";
 import * as vscode from "vscode";
 
 export function getWebviewHtml(webview, extensionPath, initialState) {
+	if (!extensionPath) {
+		throw new Error("extensionPath is undefined in getWebviewHtml");
+	}
 	const scriptSrc = webview.asWebviewUri(vscode.Uri.file(path.join(extensionPath, "web", "dist", "main.js")));
 	const cssSrc = webview.asWebviewUri(vscode.Uri.file(path.join(extensionPath, "web", "dist", "main.css")));
 

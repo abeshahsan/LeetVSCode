@@ -89,7 +89,10 @@ function getDefaultDirectory() {
 		return path.join(workspaceFolders[0].uri.fsPath, "Solutions");
 	}
 	// Fallback to user's home directory
-	const homeDir = process.env.HOME || process.env.USERPROFILE;
+	const homeDir = process.env.HOME || process.env.USERPROFILE || process.env.HOMEPATH;
+	if (!homeDir) {
+		return "LeetCode-Solutions"; // Last resort: relative path
+	}
 	return path.join(homeDir, "LeetCode-Solutions");
 }
 

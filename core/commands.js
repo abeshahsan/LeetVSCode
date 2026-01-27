@@ -82,7 +82,7 @@ export function registerCommands(context, provider) {
 					vscode.window.showInformationMessage("Chromium is already installed.");
 					return;
 				}
-				await installChromium();
+				await installChromium(context);
 			} catch (error) {
 				vscode.window.showErrorMessage(`Failed to install Chromium: ${error.message}`);
 			}
@@ -99,7 +99,7 @@ export function registerCommands(context, provider) {
 					"Uninstall"
 				);
 				if (choice === "Uninstall") {
-					await uninstallChromium();
+					await uninstallChromium(context);
 				}
 			} catch (error) {
 				vscode.window.showErrorMessage(`Failed to uninstall Chromium: ${error.message}`);

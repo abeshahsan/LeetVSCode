@@ -1,9 +1,10 @@
 {
 	"name": "vs-leet",
+
 	"publisher": "abeshahsan",
 	"displayName": "VS-Leet - LeetCode Integration",
 	"description": "Complete LeetCode integration for VS Code - Browse, solve, test, and submit coding problems directly in your editor",
-	"version": "1.0.5",
+	"version": "1.0.0",
 	"engines": {
 		"vscode": "^1.90.0"
 	},
@@ -40,102 +41,7 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
-		"commands": [
-			{
-				"command": "vs-leet.signIn",
-				"title": "Sign In",
-				"category": "VS-Leet",
-				"icon": "$(account)"
-			},
-			{
-				"command": "vs-leet.signOut",
-				"title": "Sign Out",
-				"category": "VS-Leet",
-				"icon": "$(sign-out)"
-			},
-			{
-				"command": "vs-leet.clearFilter",
-				"title": "Clear Filters",
-				"category": "VS-Leet",
-				"icon": "$(clear-all)"
-			},
-			{
-				"command": "vs-leet.search",
-				"title": "Search Problems",
-				"category": "VS-Leet",
-				"icon": "$(search)"
-			},
-			{
-				"command": "vs-leet.addTag",
-				"title": "Add Tag Filter",
-				"category": "VS-Leet",
-				"icon": "$(tag)"
-			},
-			{
-				"command": "vs-leet.removeTag",
-				"title": "Remove Tag Filter",
-				"category": "VS-Leet",
-				"icon": "$(circle-slash)"
-			},
-			{
-				"command": "vs-leet.refresh",
-				"title": "Refresh Problems",
-				"category": "VS-Leet",
-				"icon": "$(refresh)"
-			},
-			{
-				"command": "vs-leet.openSettings",
-				"title": "Open Settings",
-				"category": "VS-Leet",
-				"icon": "$(settings-gear)"
-			},
-			{
-				"command": "vs-leet.changeSolutionDirectory",
-				"title": "Change Solution Directory",
-				"category": "VS-Leet",
-				"icon": "$(folder)"
-			},
-			{
-				"command": "vs-leet.clearStorage",
-				"title": "Clear All Storage (Reset Extension)",
-				"category": "VS-Leet"
-			},
-			{
-				"command": "vs-leet.installChromium",
-				"title": "Install Chromium",
-				"category": "VS-Leet"
-			},
-			{
-				"command": "vs-leet.uninstallChromium",
-				"title": "Uninstall Chromium",
-				"category": "VS-Leet"
-			},
-			{
-				"command": "vs-leet.openProblem",
-				"title": "Open Problem",
-				"category": "VS-Leet"
-			},
-			{
-				"command": "vs-leet.toggleEasy",
-				"title": "Toggle Easy Filter",
-				"category": "VS-Leet"
-			},
-			{
-				"command": "vs-leet.toggleMedium",
-				"title": "Toggle Medium Filter",
-				"category": "VS-Leet"
-			},
-			{
-				"command": "vs-leet.toggleHard",
-				"title": "Toggle Hard Filter",
-				"category": "VS-Leet"
-			},
-			{
-				"command": "vs-leet.refreshStatus",
-				"title": "Refresh Status",
-				"category": "VS-Leet"
-			}
-		],
+		"commands": [],
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -154,65 +60,13 @@
 				}
 			]
 		},
-		"viewsWelcome": [],
-		"menus": {
-			"view/title": [
-				{
-					"command": "vs-leet.signIn",
-					"when": "view == vs-leet.problemsView && !vs-leet.loggedIn",
-					"group": "navigation@1"
-				},
-				{
-					"command": "vs-leet.signOut",
-					"when": "view == vs-leet.problemsView && vs-leet.loggedIn",
-					"group": "navigation@1"
-				},
-				{
-					"command": "vs-leet.refresh",
-					"when": "view == vs-leet.problemsView && vs-leet.loggedIn",
-					"group": "navigation@2"
-				},
-				{
-					"command": "vs-leet.clearFilter",
-					"when": "view == vs-leet.problemsView && viewItem == filtersRoot",
-					"group": "navigation@4"
-				}
-			],
-			"view/item/context": [],
-			"commandPalette": [
-				{
-					"command": "vs-leet.signIn",
-					"when": "!vs-leet.loggedIn"
-				},
-				{
-					"command": "vs-leet.signOut",
-					"when": "vs-leet.loggedIn"
-				},
-				{
-					"command": "vs-leet.refresh",
-					"when": "vs-leet.loggedIn"
-				},
-				{
-					"command": "vs-leet.clearFilter",
-					"when": "vs-leet.loggedIn"
-				},
-				{
-					"command": "vs-leet.search",
-					"when": "vs-leet.loggedIn"
-				},
-				{
-					"command": "vs-leet.addTag",
-					"when": "vs-leet.loggedIn"
-				},
-				{
-					"command": "vs-leet.removeTag",
-					"when": "vs-leet.loggedIn"
-				},
-				{
-					"command": "vs-leet.openSettings"
-				}
-			]
-		},
+		"viewsWelcome": [
+			{
+				"view": "vs-leet.problemsView",
+				"contents": "Welcome to VS-Leet! Please sign in to browse and solve problems.\n[Sign In](command:vs-leet.signIn)",
+				"when": "!vs-leet.loggedIn"
+			}
+		],
 		"customEditors": [],
 		"configuration": {
 			"type": "object",
@@ -307,16 +161,22 @@
 		"@vscode/test-cli": "^0.0.11",
 		"@vscode/test-electron": "^2.5.2",
 		"autoprefixer": "^10.4.21",
-		"esbuild": "^0.24.0",
+		"esbuild": "^0.27.2",
 		"eslint": "^9.36.0",
 		"postcss": "^8.5.6",
 		"sharp": "^0.34.5",
 		"tailwindcss": "^3.4.18"
 	},
 	"dependencies": {
+		"better-sqlite3": "^12.6.2",
 		"dotenv": "^17.2.3",
 		"node-fetch": "^3.3.2",
+		"open": "^11.0.0",
 		"playwright": "^1.56.0",
+		"puppeteer": "^24.36.0",
+		"puppeteer-extra": "^3.3.6",
+		"puppeteer-extra-plugin-adblocker": "^2.13.6",
+		"puppeteer-extra-plugin-stealth": "^2.11.2",
 		"winston": "^3.18.3"
 	}
 }

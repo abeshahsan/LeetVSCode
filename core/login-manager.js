@@ -12,7 +12,7 @@ export async function runLoginProcess(panel, context, provider) {
 		// Persist cookie header string and csrf token separately
 		await setCookies(context, result.cookie);
 		await setCsrfToken(context, result.csrftoken || "");
-		
+
 		// Refresh UI after successful login
 		if (provider) {
 			try {
@@ -32,6 +32,9 @@ export async function runLoginProcess(panel, context, provider) {
 }
 
 export async function runPlaywrightLogin(context) {
+	if (!context || !context.globalStorageUri || !context.globalStorageUri.fsPath) {
+		throw new Error("Extension context, globalStorageUri, or fsPath is missing. Try reloading VS Code.");
+	}
 	const userDataDir = path.join(context.globalStorageUri.fsPath, "chrome-profile");
 
 	logger.info("userDataDir: " + userDataDir);
@@ -41,14 +44,14 @@ export async function runPlaywrightLogin(context) {
 
 	try {
 		// Ensure Chromium is installed before launching
-		await ensureChromium();
-		
+		await ensureChromium(context);
+
 		// Playwright manages the executable path internally when not specified
 		const launchOptions = {
 			headless: false,
-			args: ["--start-maximized", "--disable-blink-features=AutomationControlled"],
+			args: ["--start-maximized", "--disable-blink-features=AutomationControlled", "--enable-save-password-bubble=0"],
 		};
-		
+
 		browserContext = await chromium.launchPersistentContext(userDataDir, launchOptions);
 
 		await browserContext.clearCookies();
@@ -96,7 +99,7 @@ async function waitForLogin(browserContext, { timeoutMs = 180000 } = {}) {
 		if (hasLeetCodeSession) {
 			const cookieHeader = leetCodeCookie.map((c) => `${c.name}=${c.value}`).join("; ");
 			const csrftoken = leetCodeCookie.find((c) => c.name === "csrftoken")?.value;
-			return {cookie: cookieHeader, csrftoken  };
+			return { cookie: cookieHeader, csrftoken };
 		}
 	}
 	return null;

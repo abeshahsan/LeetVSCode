@@ -31,10 +31,10 @@ async function main() {
 		sourcemap: !production,
 		sourcesContent: false,
 		platform: 'node',
+		target: 'node20',
 		outfile: 'dist/extension.js',
 		external: [
 			'vscode',
-			// Playwright has native binaries that can't be bundled
 			'playwright',
 			'playwright-core',
 		],

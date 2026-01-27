@@ -3,7 +3,7 @@ import { chromium } from "playwright";
 import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { leetcodeOutputChannel } from "../../output-logger";
 
 export function getChromiumExecutablePath() {
 	try {
@@ -24,7 +24,7 @@ export async function isChromiumInstalled() {
 /**
  * Install Chromium using Playwright CLI with progress notification
  */
-export async function installChromium() {
+export async function installChromium(context) {
 	try {
 		// Check if already installed
 		if (await isChromiumInstalled()) {
@@ -33,15 +33,11 @@ export async function installChromium() {
 		}
 
 		// Get the path to Playwright CLI
-		const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-		const playwrightCliPath = path.join(
-			moduleDir,
-			"..",
-			"..",
-			"node_modules",
-			"playwright",
-			"cli.js"
-		);
+		if (!context || !context.extensionPath) {
+			throw new Error("Extension context or extensionPath is missing");
+		}
+
+		const playwrightCliPath = path.join(context.extensionPath, "node_modules", "playwright", "cli.js");
 
 		return await vscode.window.withProgress(
 			{
@@ -50,15 +46,19 @@ export async function installChromium() {
 				cancellable: false,
 			},
 			async (progress) => {
-				progress.report({ 
-					message: "Chromium is required for secure LeetCode authentication. Starting download..." 
+				progress.report({
+					message: "Chromium is required for secure LeetCode authentication. Starting download...",
 				});
 
 				return new Promise((resolve, reject) => {
 					// Spawn the Playwright install command
-					const installProcess = spawn(process.execPath, [playwrightCliPath, "install", "chromium"], {
-						shell: true,
-					});
+					const installProcess = spawn(
+						`\"${process.execPath}\"`,
+						[playwrightCliPath, "install", "chromium"],
+						{
+							shell: true,
+						},
+					);
 
 					let stderrData = "";
 					let lastPercent = 0;
@@ -66,7 +66,7 @@ export async function installChromium() {
 					// Capture stdout and show progress
 					installProcess.stdout.on("data", (data) => {
 						const output = data.toString();
-						
+
 						// Extract percentage from output
 						const percentMatch = output.match(/(\d+)%/);
 						if (percentMatch) {
@@ -74,9 +74,9 @@ export async function installChromium() {
 							if (currentPercent !== lastPercent) {
 								const increment = Math.max(0, currentPercent - lastPercent);
 								lastPercent = currentPercent;
-								progress.report({ 
+								progress.report({
 									message: `${currentPercent}%`,
-									increment
+									increment,
 								});
 							}
 						}
@@ -91,7 +91,7 @@ export async function installChromium() {
 					installProcess.on("close", async (code) => {
 						if (code === 0) {
 							progress.report({ message: "Verifying installation..." });
-							
+
 							// Verify installation
 							const isInstalled = await isChromiumInstalled();
 							if (isInstalled) {
@@ -102,19 +102,18 @@ export async function installChromium() {
 							}
 						} else {
 							const errorMsg = `Installation failed with exit code ${code}`;
-							
+
 							// Show fallback command
 							const fallbackCmd = `node "${playwrightCliPath}" install chromium`;
-							vscode.window.showErrorMessage(
-								`❌ ${errorMsg}. Run this command manually:`,
-								"Copy Command"
-							).then(selection => {
-								if (selection === "Copy Command") {
-									vscode.env.clipboard.writeText(fallbackCmd);
-									vscode.window.showInformationMessage("Command copied to clipboard!");
-								}
-							});
-							
+							vscode.window
+								.showErrorMessage(`❌ ${errorMsg}. Run this command manually:`, "Copy Command")
+								.then((selection) => {
+									if (selection === "Copy Command") {
+										vscode.env.clipboard.writeText(fallbackCmd);
+										vscode.window.showInformationMessage("Command copied to clipboard!");
+									}
+								});
+
 							reject(new Error(`${errorMsg}\n${stderrData || "No error details available"}`));
 						}
 					});
@@ -122,23 +121,22 @@ export async function installChromium() {
 					// Handle process errors
 					installProcess.on("error", (error) => {
 						const errorMsg = `Failed to start installation: ${error.message}`;
-						
+
 						// Show fallback command
 						const fallbackCmd = `node "${playwrightCliPath}" install chromium`;
-						vscode.window.showErrorMessage(
-							`❌ ${errorMsg}. Run this command manually:`,
-							"Copy Command"
-						).then(selection => {
-							if (selection === "Copy Command") {
-								vscode.env.clipboard.writeText(fallbackCmd);
-								vscode.window.showInformationMessage("Command copied to clipboard!");
-							}
-						});
-						
+						vscode.window
+							.showErrorMessage(`❌ ${errorMsg}. Run this command manually:`, "Copy Command")
+							.then((selection) => {
+								if (selection === "Copy Command") {
+									vscode.env.clipboard.writeText(fallbackCmd);
+									vscode.window.showInformationMessage("Command copied to clipboard!");
+								}
+							});
+
 						reject(error);
 					});
 				});
-			}
+			},
 		);
 	} catch (error) {
 		vscode.window.showErrorMessage(`Failed to install Chromium: ${error.message}`);
@@ -150,7 +148,7 @@ export async function installChromium() {
  * Ensure Chromium is available (install if needed)
  * @returns {Promise<string|null>} Executable path (null for Playwright-managed)
  */
-export async function ensureChromium() {
+export async function ensureChromium(context) {
 	if (await isChromiumInstalled()) {
 		return null; // Playwright manages the path internally
 	}
@@ -159,11 +157,11 @@ export async function ensureChromium() {
 	const message = await vscode.window.showInformationMessage(
 		"🔐 VS-Leet needs Chromium to securely authenticate with LeetCode. This is a one-time download (~140MB).",
 		"Install Now",
-		"Cancel"
+		"Cancel",
 	);
 
 	if (message === "Install Now") {
-		await installChromium();
+		await installChromium(context);
 		return null; // Playwright manages the path internally
 	} else {
 		throw new Error("Chromium installation cancelled by user");
@@ -173,9 +171,11 @@ export async function ensureChromium() {
 /**
  * Uninstall Chromium (for cleanup)
  */
-export async function uninstallChromium() {
-	const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-	const playwrightCliPath = path.join(moduleDir, "..", "..", "node_modules", "playwright", "cli.js");
+export async function uninstallChromium(context) {
+	if (!context || !context.extensionPath) {
+		throw new Error("Extension context or extensionPath is missing");
+	}
+	const playwrightCliPath = path.join(context.extensionPath, "node_modules", "playwright", "cli.js");
 
 	return await vscode.window.withProgress(
 		{
@@ -187,11 +187,9 @@ export async function uninstallChromium() {
 			progress.report({ message: "Removing Playwright Chromium..." });
 
 			return new Promise((resolve, reject) => {
-				const uninstallProcess = spawn(
-					process.execPath,
-					[playwrightCliPath, "uninstall", "chromium"],
-					{ shell: true }
-				);
+				const uninstallProcess = spawn(process.execPath, [playwrightCliPath, "uninstall", "chromium"], {
+					shell: true,
+				});
 
 				let stderrData = "";
 				uninstallProcess.stderr.on("data", (data) => {
@@ -213,33 +211,31 @@ export async function uninstallChromium() {
 
 					const errorMsg = `Uninstall failed with exit code ${code}`;
 					const fallbackCmd = `node "${playwrightCliPath}" uninstall chromium`;
-					vscode.window.showErrorMessage(
-						`❌ ${errorMsg}. Run this command manually:`,
-						"Copy Command"
-					).then((selection) => {
-						if (selection === "Copy Command") {
-							vscode.env.clipboard.writeText(fallbackCmd);
-							vscode.window.showInformationMessage("Command copied to clipboard!");
-						}
-					});
+					vscode.window
+						.showErrorMessage(`❌ ${errorMsg}. Run this command manually:`, "Copy Command")
+						.then((selection) => {
+							if (selection === "Copy Command") {
+								vscode.env.clipboard.writeText(fallbackCmd);
+								vscode.window.showInformationMessage("Command copied to clipboard!");
+							}
+						});
 					reject(new Error(`${errorMsg}\n${stderrData || "No error details available"}`));
 				});
 
 				uninstallProcess.on("error", (error) => {
 					const errorMsg = `Failed to start uninstall: ${error.message}`;
 					const fallbackCmd = `node "${playwrightCliPath}" uninstall chromium`;
-					vscode.window.showErrorMessage(
-						`❌ ${errorMsg}. Run this command manually:`,
-						"Copy Command"
-					).then((selection) => {
-						if (selection === "Copy Command") {
-							vscode.env.clipboard.writeText(fallbackCmd);
-							vscode.window.showInformationMessage("Command copied to clipboard!");
-						}
-					});
+					vscode.window
+						.showErrorMessage(`❌ ${errorMsg}. Run this command manually:`, "Copy Command")
+						.then((selection) => {
+							if (selection === "Copy Command") {
+								vscode.env.clipboard.writeText(fallbackCmd);
+								vscode.window.showInformationMessage("Command copied to clipboard!");
+							}
+						});
 					reject(error);
 				});
 			});
-		}
+		},
 	);
 }
